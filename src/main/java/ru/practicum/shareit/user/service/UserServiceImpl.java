@@ -1,6 +1,5 @@
 package ru.practicum.shareit.user.service;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.error.exception.EmailExistException;
 import ru.practicum.shareit.user.model.User;
@@ -14,7 +13,6 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 @Service
-@Slf4j
 public class UserServiceImpl implements UserService {
     private static final String EMAIL_PATTERN = "\\w+([.-]?\\w+)*@\\w+([.-]?\\w+)*\\.\\w{2,4}";
     private final UserRepository repo;
@@ -39,7 +37,6 @@ public class UserServiceImpl implements UserService {
         if (!repo.isEmailExist(email)) {
             return repo.add(user);
         } else {
-            log.warn("Пользователь с email {} уже существует", email);
             throw new EmailExistException(String.format("Пользователь с email %s уже существует", email));
         }
     }
@@ -56,13 +53,11 @@ public class UserServiceImpl implements UserService {
             if (Pattern.matches(EMAIL_PATTERN, email)) {
                 String oldEmail = user.getEmail();
                 if (!oldEmail.equals(email) && repo.isEmailExist(email)) {
-                    log.warn("Пользователь с email {} уже существует", email);
                     throw new EmailExistException(String.format("Пользователь с email %s уже существует", email));
                 }
                 repo.deleteEmail(oldEmail);
                 user.setEmail(email);
             } else {
-                log.warn("Email {} некорректный", email);
                 throw new ValidationException(String.format("Email %s некорректный", email));
             }
         }

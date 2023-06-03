@@ -42,7 +42,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse ValidationException(final ValidationException e) {
+    public ErrorResponse handleValidationException(final ValidationException e) {
         log.error(e.getMessage(), e);
         return new ErrorResponse(e.getMessage());
     }
@@ -53,6 +53,8 @@ public class ErrorHandler {
                                                                    WebRequest request) {
         ErrorResponse response = new ErrorResponse(String.format("Переменная %s: %s должна быть %s.",
                 e.getName(), e.getValue(), e.getRequiredType().getSimpleName()));
+        log.error("Переменная {}: {} должна быть {}.",
+                e.getName(), e.getValue(), e.getRequiredType().getSimpleName());
         return response;
     }
 
@@ -73,12 +75,14 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNoHandlerFoundException(final NoHandlerFoundException e, WebRequest request) {
+        log.error("Неизвестный запрос.");
         return new ErrorResponse("Неизвестный запрос.");
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleThrowable(final Throwable e) {
+        log.error("Произошла непредвиденная ошибка.");
         return new ErrorResponse("Произошла непредвиденная ошибка.");
     }
 }

@@ -21,12 +21,10 @@ public class UserRepositoryInMemoryImpl implements UserRepository {
 
     @Override
     public User findById(long id) {
-        try {
-            return users.get(id);
-        } catch (NullPointerException e) {
-            log.warn("Пользователь с id {} не найден", id);
+        if (!users.containsKey(id)) {
             throw new NotFoundException(String.format("Пользователь с id %d не найден", id));
         }
+        return users.get(id);
     }
 
     @Override
@@ -46,6 +44,7 @@ public class UserRepositoryInMemoryImpl implements UserRepository {
         users.put(user.getId(), user);
         userEmails.remove(oldEmail);
         userEmails.add(user.getEmail());
+        log.info("Обновлен пользователь с id {}", user.getId());
         return user;
     }
 
@@ -54,6 +53,7 @@ public class UserRepositoryInMemoryImpl implements UserRepository {
         if (users.containsKey(id)) {
             userEmails.remove(users.get(id).getEmail());
             users.remove(id);
+            log.info("Удален пользователь с id {}", id);
             return true;
         }
         return false;
