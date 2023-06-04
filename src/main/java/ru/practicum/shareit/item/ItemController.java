@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
@@ -23,7 +24,7 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> findAll(@RequestHeader("X-Sharer-User-Id") long userId) {
+    public List<ItemDto> findAllByUserId(@RequestHeader("X-Sharer-User-Id") long userId) {
         return service.findAllByUserId(userId).stream()
                 .map(ItemMapper::toItemDto).collect(Collectors.toList());
     }
@@ -40,6 +41,7 @@ public class ItemController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ItemDto add(@RequestHeader("X-Sharer-User-Id") Long userId,
                        @Valid @RequestBody ItemDto itemDto) {
         return ItemMapper.toItemDto(service.add(userId, ItemMapper.toItem(itemDto)));
