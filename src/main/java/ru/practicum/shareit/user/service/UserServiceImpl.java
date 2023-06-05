@@ -43,12 +43,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto patch(long id, UserDto userDto) {
         User user = repo.findById(id);
-        User userToUpdate = User.builder().id(id).name(user.getName()).email(user.getEmail()).build();
         if (userDto.getName() != null) {
             if (userDto.getName().isBlank()) {
                 throw new ValidationException("Имя не может быть пустым");
             }
-            userToUpdate.setName(userDto.getName());
+            user.setName(userDto.getName());
         }
         if (userDto.getEmail() != null) {
             if (userDto.getEmail().isBlank()) {
@@ -59,9 +58,9 @@ public class UserServiceImpl implements UserService {
             if (!email.equals(oldEmail) && repo.isEmailExist(email)) {
                 throw new EmailExistException(String.format("Пользователь с email %s уже существует", email));
             }
-            userToUpdate.setEmail(userDto.getEmail());
+            user.setEmail(userDto.getEmail());
         }
-        return UserMapper.toUserDto(repo.update(userToUpdate));
+        return UserMapper.toUserDto(repo.update(user));
     }
 
     @Override
