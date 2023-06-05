@@ -11,7 +11,7 @@ import java.util.*;
 @Slf4j
 public class UserRepositoryInMemoryImpl implements UserRepository {
     private final Map<Long, User> users = new HashMap<>();
-    private final Set<String> userEmails = new HashSet<>();
+    private final Set<String> emails = new HashSet<>();
     private long nextId = 1;
 
     @Override
@@ -32,18 +32,22 @@ public class UserRepositoryInMemoryImpl implements UserRepository {
         long userId = nextId++;
         user.setId(userId);
         users.put(userId, user);
-        userEmails.add(user.getEmail());
+        emails.add(user.getEmail());
         log.info("Добавлен пользователь с id {}", userId);
         return user;
     }
 
     @Override
     public User update(User user) {
-        User userToUpdate = users.get(user.getId());
-        String oldEmail = userToUpdate.getEmail();
-        users.put(user.getId(), user);
-        userEmails.remove(oldEmail);
-        userEmails.add(user.getEmail());
+        //если емейл не совпадает, проверить, не содержися ли, если нет, обновить, удалить старый
+        long id = user.getId();
+        String email = user.getEmail();
+        String oldEmail = users.get(id).getEmail();
+        if (!email.equals(oldEmail)) {
+            emails.remove(oldEmail);
+            emails.add(email);
+        }
+        users.put(id, user);
         log.info("Обновлен пользователь с id {}", user.getId());
         return user;
     }
@@ -51,7 +55,7 @@ public class UserRepositoryInMemoryImpl implements UserRepository {
     @Override
     public boolean delete(long id) {
         if (users.containsKey(id)) {
-            userEmails.remove(users.get(id).getEmail());
+            emails.remove(users.get(id).getEmail());
             users.remove(id);
             log.info("Удален пользователь с id {}", id);
             return true;
@@ -61,11 +65,7 @@ public class UserRepositoryInMemoryImpl implements UserRepository {
 
     @Override
     public boolean isEmailExist(String email) {
-        return userEmails.contains(email);
+        return emails.contains(email);
     }
 
-    @Override
-    public void deleteEmail(String oldEmail) {
-        userEmails.remove(oldEmail);
-    }
 }

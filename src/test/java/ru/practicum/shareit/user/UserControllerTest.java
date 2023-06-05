@@ -11,16 +11,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.error.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -38,18 +34,13 @@ class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    private User user;
     private UserDto userDto;
-    private User.UserBuilder userBuilder;
     private UserDto.UserDtoBuilder userDtoBuilder;
 
     ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     void setupBuilder() {
-        userBuilder = User.builder()
-                .name("name")
-                .email("e@mail.ru");
         userDtoBuilder = UserDto.builder()
                 .name("name")
                 .email("e@mail.ru");
@@ -72,7 +63,7 @@ class UserControllerTest {
 
         // Single List
         when(service.findAll()).thenReturn(List.of(
-                userBuilder.id(1L).build()));
+                userDtoBuilder.id(1L).build()));
         mockMvc.perform(get(URL))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -83,11 +74,10 @@ class UserControllerTest {
     @Test
     void shouldFindById() throws Exception {
         //regular case
-        user = userBuilder.id(1L).build();
         userDto = userDtoBuilder.id(1L).build();
         String json = mapper.writeValueAsString(userDto);
 
-        when(service.findById(1)).thenReturn(user);
+        when(service.findById(1)).thenReturn(userDto);
         mockMvc.perform(get(URL + "/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -105,13 +95,12 @@ class UserControllerTest {
     void shouldAdd() throws Exception {
         //addRegular
         userDto = userDtoBuilder.build();
-        User userAdded = userBuilder.id(1L).build();
         UserDto userDtoAdded = userDtoBuilder.id(1L).build();
 
         String json = mapper.writeValueAsString(userDto);
         String jsonAdded = mapper.writeValueAsString(userDtoAdded);
 
-        when(service.add(UserMapper.toUser(userDto))).thenReturn(userAdded);
+        when(service.add(userDto)).thenReturn(userDtoAdded);
         this.mockMvc.perform(post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
@@ -127,7 +116,8 @@ class UserControllerTest {
                         .content(json))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(content().json("{\"validationErrors\":{\"name\":\"Имя не может быть пустым\"}}"));
+                .andExpect(jsonPath("$.error", containsString("Имя не может быть пустым")));
+        //.andExpect(content().json("{\"validationErrors\":{\"name\":\"Имя не может быть пустым\"}}"));
 
         //fail empty email
         userDto = userDtoBuilder.name("name").email("").build();
@@ -137,7 +127,7 @@ class UserControllerTest {
                         .content(json))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(content().json("{\"validationErrors\":{\"email\":\"E-mail не может быть пустым\"}}"));
+                .andExpect(jsonPath("$.error", containsString("E-mail не может быть пустым")));
 
         //fail некорректный email
         userDto = userDtoBuilder.email("email").build();
@@ -152,15 +142,26 @@ class UserControllerTest {
 
     @Test
     void shouldPatch() throws Exception {
-        Map<String, String> patchParam = new HashMap<>();
-        patchParam.put("name", "namePatched");
 
         //patch name
         String json = "{\"name\": \"namePatched\"}";
-        user = userBuilder.id(1L).name("namePatched").build();
-        userDto = userDtoBuilder.id(1L).name("namePatched").build();
-        String jsonPatched = mapper.writeValueAsString(userDto);
-        when(service.patch(1L, patchParam)).thenReturn(user);
+        userDto = UserDto.builder().name("namePatched").build();
+        UserDto userDtoUpdated = userDtoBuilder.id(1L).name("namePatched").build();
+        String jsonPatched = mapper.writeValueAsString(userDtoUpdated);
+        when(service.patch(1L, userDto)).thenReturn(userDtoUpdated);
+        this.mockMvc.perform(patch(URL + "/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().string(jsonPatched));
+
+        //patch email
+        json = "{\"email\": \"patched@mail.ru\"}";
+        userDto = UserDto.builder().email("patched@mail.ru").build();
+        userDtoUpdated = userDtoBuilder.email("patched@mail.ru").build();
+        jsonPatched = mapper.writeValueAsString(userDtoUpdated);
+        when(service.patch(1L, userDto)).thenReturn(userDtoUpdated);
         this.mockMvc.perform(patch(URL + "/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
@@ -168,20 +169,16 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().json(jsonPatched));
 
-        //patch email
-        patchParam.put("email", "patched@mail.ru");
-        patchParam.remove("name");
-        json = "{\"email\": \"patched@mail.ru\"}";
-        user = userBuilder.email("patched@mail.ru").build();
-        userDto = userDtoBuilder.email("patched@mail.ru").build();
-        jsonPatched = mapper.writeValueAsString(userDto);
-        when(service.patch(1L, patchParam)).thenReturn(user);
+        //fail некорректный email
+        json = "{\"email\": \"patched\"}";
         this.mockMvc.perform(patch(URL + "/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().json(jsonPatched));
+                .andExpect(status().isBadRequest())
+                .andExpect(content()
+                        .json("{\"validationErrors\":{\"email\":\"Введен некорректный e-mail\"}}"));
+
     }
 
     @Test

@@ -1,21 +1,23 @@
 package ru.practicum.shareit.item;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+
+import static ru.practicum.shareit.validation.ValidationGroups.Create;
+import static ru.practicum.shareit.validation.ValidationGroups.Update;
 
 /**
  * TODO Sprint add-controllers.
  */
 @RestController
 @RequestMapping("/items")
+@Validated
 public class ItemController {
     private final ItemService service;
 
@@ -25,33 +27,33 @@ public class ItemController {
 
     @GetMapping
     public List<ItemDto> findAllByUserId(@RequestHeader("X-Sharer-User-Id") long userId) {
-        return service.findAllByUserId(userId).stream()
-                .map(ItemMapper::toItemDto).collect(Collectors.toList());
+        return service.findAllByUserId(userId);
     }
 
     @GetMapping("{itemId}")
     public ItemDto findById(@PathVariable long itemId) {
-        return ItemMapper.toItemDto(service.findById(itemId));
+        return service.findById(itemId);
     }
 
     @GetMapping("/search")
     public List<ItemDto> findByText(@RequestParam String text) {
-        return service.findByText(text).stream()
-                .map(ItemMapper::toItemDto).collect(Collectors.toList());
+        return service.findByText(text);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Validated(Create.class)
     public ItemDto add(@RequestHeader("X-Sharer-User-Id") Long userId,
                        @Valid @RequestBody ItemDto itemDto) {
-        return ItemMapper.toItemDto(service.add(userId, ItemMapper.toItem(itemDto)));
+        return service.add(userId, itemDto);
     }
 
     @PatchMapping("/{itemId}")
-    public Item patch(@RequestHeader("X-Sharer-User-Id") Long userId,
-                      @RequestBody Map<String, String> updates,
-                      @PathVariable("itemId") long itemId) {
-        return service.patch(userId, itemId, updates);
+    @Validated(Update.class)
+    public ItemDto patch(@RequestHeader("X-Sharer-User-Id") Long userId,
+                         @Valid @RequestBody ItemDto itemDto,
+                         @PathVariable("itemId") long itemId) {
+        return service.patch(userId, itemId, itemDto);
     }
 
     @DeleteMapping("/{itemId}")

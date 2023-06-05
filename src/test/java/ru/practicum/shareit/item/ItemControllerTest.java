@@ -11,16 +11,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.error.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -38,18 +34,12 @@ class ItemControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    private Item item;
     private ItemDto itemDto;
-    private Item.ItemBuilder itemBuilder;
     private ItemDto.ItemDtoBuilder itemDtoBuilder;
     ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     void setupBuilder() {
-        itemBuilder = Item.builder()
-                .name("name")
-                .description("description")
-                .available(true);
         itemDtoBuilder = ItemDto.builder()
                 .name("name")
                 .description("description")
@@ -74,7 +64,7 @@ class ItemControllerTest {
 
         // Single List
         when(service.findAllByUserId(1L)).thenReturn(List.of(
-                itemBuilder.id(1L).build()));
+                itemDtoBuilder.id(1L).build()));
         mockMvc.perform(get(URL)
                         .header("X-Sharer-User-Id", 1))
                 .andDo(print())
@@ -91,11 +81,10 @@ class ItemControllerTest {
     @Test
     void shouldFindById() throws Exception {
         //regular case
-        item = itemBuilder.id(1L).build();
         itemDto = itemDtoBuilder.id(1L).build();
         String json = mapper.writeValueAsString(itemDto);
 
-        when(service.findById(1)).thenReturn(item);
+        when(service.findById(1)).thenReturn(itemDto);
         mockMvc.perform(get(URL + "/1"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -121,7 +110,7 @@ class ItemControllerTest {
 
         // Single List
         when(service.findByText("ОтВ")).thenReturn(List.of(
-                itemBuilder.id(1L).name("Отвертка").build()));
+                itemDtoBuilder.id(1L).name("Отвертка").build()));
         mockMvc.perform(get(URL + "/search?text=ОтВ"))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -134,13 +123,12 @@ class ItemControllerTest {
         //addRegular
         long userId = 1L;
         itemDto = itemDtoBuilder.build();
-        Item itemAdded = itemBuilder.id(1L).build();
         ItemDto itemDtoAdded = itemDtoBuilder.id(1L).build();
 
         String json = mapper.writeValueAsString(itemDto);
         String jsonAdded = mapper.writeValueAsString(itemDtoAdded);
 
-        when(service.add(userId, ItemMapper.toItem(itemDto))).thenReturn(itemAdded);
+        when(service.add(userId, itemDto)).thenReturn(itemDtoAdded);
         this.mockMvc.perform(post(URL)
                         .header("X-Sharer-User-Id", 1)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -158,8 +146,8 @@ class ItemControllerTest {
                         .content(json))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(content()
-                        .json("{\"validationErrors\":{\"name\":\"Название не может быть пустым\"}}"));
+                .andExpect(jsonPath("$.error", containsString("Название не может быть пустым")));
+
 
         //fail empty description
         itemDto = itemDtoBuilder.name("name").description("").build();
@@ -170,8 +158,7 @@ class ItemControllerTest {
                         .content(json))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(content()
-                        .json("{\"validationErrors\":{\"description\":\"Описание не может быть пустым\"}}"));
+                .andExpect(jsonPath("$.error", containsString("Описание не может быть пустым")));
 
         //fail header absence
         this.mockMvc.perform(post(URL)
@@ -183,15 +170,13 @@ class ItemControllerTest {
 
     @Test
     void shouldPatch() throws Exception {
-        Map<String, String> patchParam = new HashMap<>();
-
         //patch name
-        patchParam.put("name", "namePatched");
         String json = "{\"name\": \"namePatched\"}";
-        item = itemBuilder.id(1L).name("namePatched").build();
-        itemDto = itemDtoBuilder.id(1L).name("namePatched").build();
-        String jsonPatched = mapper.writeValueAsString(itemDto);
-        when(service.patch(1L, 1L, patchParam)).thenReturn(item);
+        itemDto = ItemDto.builder().name("namePatched").build();
+        ItemDto itemDtoPatched = itemDtoBuilder.id(1L).name("namePatched").build();
+        String jsonPatched = mapper.writeValueAsString(itemDtoPatched);
+        System.out.println(jsonPatched);
+        when(service.patch(1L, 1L, itemDto)).thenReturn(itemDtoPatched);
         this.mockMvc.perform(patch(URL + "/1")
                         .header("X-Sharer-User-Id", 1)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -201,13 +186,11 @@ class ItemControllerTest {
                 .andExpect(content().json(jsonPatched));
 
         //patch description
-        patchParam.put("description", "descriptionPatched");
-        patchParam.remove("name");
         json = "{\"description\": \"descriptionPatched\"}";
-        item = itemBuilder.description("descriptionPatched").build();
-        itemDto = itemDtoBuilder.description("descriptionPatched").build();
-        jsonPatched = mapper.writeValueAsString(itemDto);
-        when(service.patch(1L, 1L, patchParam)).thenReturn(item);
+        itemDto = ItemDto.builder().description("descriptionPatched").build();
+        itemDtoPatched = itemDtoBuilder.description("descriptionPatched").build();
+        jsonPatched = mapper.writeValueAsString(itemDtoPatched);
+        when(service.patch(1L, 1L, itemDto)).thenReturn(itemDtoPatched);
         this.mockMvc.perform(patch(URL + "/1")
                         .header("X-Sharer-User-Id", 1)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -217,13 +200,11 @@ class ItemControllerTest {
                 .andExpect(content().json(jsonPatched));
 
         //patch available
-        patchParam.put("available", "false");
-        patchParam.remove("description");
         json = "{\"available\": \"false\"}";
-        item = itemBuilder.available(false).build();
-        itemDto = itemDtoBuilder.available(false).build();
+        itemDto = ItemDto.builder().available(false).build();
+        itemDtoPatched = itemDtoBuilder.available(false).build();
         jsonPatched = mapper.writeValueAsString(itemDto);
-        when(service.patch(1L, 1L, patchParam)).thenReturn(item);
+        when(service.patch(1L, 1L, itemDto)).thenReturn(itemDtoPatched);
         this.mockMvc.perform(patch(URL + "/1")
                         .header("X-Sharer-User-Id", 1)
                         .contentType(MediaType.APPLICATION_JSON)

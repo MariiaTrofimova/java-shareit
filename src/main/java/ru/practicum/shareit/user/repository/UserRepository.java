@@ -16,6 +16,4 @@ public interface UserRepository {
     boolean delete(long id);
 
     boolean isEmailExist(String email);
-
-    void deleteEmail(String oldEmail);
 }

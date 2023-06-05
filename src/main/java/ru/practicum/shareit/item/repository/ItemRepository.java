@@ -13,8 +13,6 @@ public interface ItemRepository {
 
     Item add(long userId, Item item);
 
-    long findOwner(long itemId);
-
     Item update(Item item);
 
     void delete(long userId, Long itemId);

@@ -57,11 +57,6 @@ public class ItemRepositoryInMemoryImpl implements ItemRepository {
     }
 
     @Override
-    public long findOwner(long itemId) {
-        return items.get(itemId).getOwner().getId();
-    }
-
-    @Override
     public Item update(Item item) {
         items.put(item.getId(), item);
         log.info("Обновлена вещь с id {}", item.getId());

@@ -2,19 +2,17 @@ package ru.practicum.shareit.user.service;
 
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.error.exception.EmailExistException;
+import ru.practicum.shareit.user.UserMapper;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import javax.validation.ValidationException;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
-    private static final String EMAIL_PATTERN = "\\w+([.-]?\\w+)*@\\w+([.-]?\\w+)*\\.\\w{2,4}";
     private final UserRepository repo;
 
     public UserServiceImpl(UserRepository repo) {
@@ -22,46 +20,48 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> findAll() {
-        return repo.findAll();
+    public List<UserDto> findAll() {
+        return repo.findAll().stream()
+                .map(UserMapper::toUserDto).collect(Collectors.toList());
     }
 
     @Override
-    public User findById(long id) {
-        return repo.findById(id);
+    public UserDto findById(long id) {
+        return UserMapper.toUserDto(repo.findById(id));
     }
 
     @Override
-    public User add(User user) {
-        String email = user.getEmail();
+    public UserDto add(UserDto userDto) {
+        String email = userDto.getEmail();
         if (!repo.isEmailExist(email)) {
-            return repo.add(user);
+            return UserMapper.toUserDto(repo.add(UserMapper.toUser(userDto)));
         } else {
             throw new EmailExistException(String.format("Пользователь с email %s уже существует", email));
         }
     }
 
     @Override
-    public User patch(long id, Map<String, String> updates) {
+    public UserDto patch(long id, UserDto userDto) {
         User user = repo.findById(id);
-        Collection<String> paramsToUpdate = new HashSet<>(updates.keySet());
-        if (paramsToUpdate.contains("name")) {
-            user.setName(updates.get("name"));
-        }
-        if (paramsToUpdate.contains("email")) {
-            String email = updates.get("email");
-            if (Pattern.matches(EMAIL_PATTERN, email)) {
-                String oldEmail = user.getEmail();
-                if (!oldEmail.equals(email) && repo.isEmailExist(email)) {
-                    throw new EmailExistException(String.format("Пользователь с email %s уже существует", email));
-                }
-                repo.deleteEmail(oldEmail);
-                user.setEmail(email);
-            } else {
-                throw new ValidationException(String.format("Email %s некорректный", email));
+        User userToUpdate = User.builder().id(id).name(user.getName()).email(user.getEmail()).build();
+        if (userDto.getName() != null) {
+            if (userDto.getName().isBlank()) {
+                throw new ValidationException("Имя не может быть пустым");
             }
+            userToUpdate.setName(userDto.getName());
         }
-        return repo.update(user);
+        if (userDto.getEmail() != null) {
+            if (userDto.getEmail().isBlank()) {
+                throw new ValidationException("E-mail не может быть пустым");
+            }
+            String oldEmail = user.getEmail();
+            String email = userDto.getEmail();
+            if (!email.equals(oldEmail) && repo.isEmailExist(email)) {
+                throw new EmailExistException(String.format("Пользователь с email %s уже существует", email));
+            }
+            userToUpdate.setEmail(userDto.getEmail());
+        }
+        return UserMapper.toUserDto(repo.update(userToUpdate));
     }
 
     @Override
