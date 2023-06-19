@@ -8,7 +8,7 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * TODO Sprint add-bookings.
@@ -24,10 +24,10 @@ public class Booking {
     private Long id;
 
     @Column(name = "startDate", nullable = false)
-    private LocalDate start;
+    private LocalDateTime start;
 
     @Column(name = "endDate", nullable = false)
-    private LocalDate end;
+    private LocalDateTime end;
 
     @OneToOne(fetch = FetchType.LAZY)
     @ToString.Exclude

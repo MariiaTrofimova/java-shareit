@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user.service;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -17,12 +18,9 @@ import java.util.List;
 @Service
 @Transactional
 @Slf4j
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository repository;
-
-    public UserServiceImpl(UserRepository repository) {
-        this.repository = repository;
-    }
 
     @Override
     public List<UserDto> findAll() {

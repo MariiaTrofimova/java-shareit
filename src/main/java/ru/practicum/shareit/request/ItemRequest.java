@@ -2,9 +2,10 @@ package ru.practicum.shareit.request;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import ru.practicum.shareit.user.model.User;
 
-import javax.validation.constraints.Size;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 
 /**
@@ -12,10 +13,19 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Setter
+@Entity
+@Table(name = "requests")
 public class ItemRequest {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
-    @Size(min = 1, max = 200, message = "Длина описания должна быть от 1 до 200 символов")
+
+    @Column(name = "description")
     String description;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @JoinColumn(name = "requestor_id")
     User requestor;
     LocalDateTime created;
 }

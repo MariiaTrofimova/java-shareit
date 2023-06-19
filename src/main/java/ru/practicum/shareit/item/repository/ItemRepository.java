@@ -13,7 +13,9 @@ public interface ItemRepository extends JpaRepository<Item, Long>,
         CrudRepository<Item, Long> {
     List<Item> findByOwnerId(long userId);
 
-    //@Query("select i from Item i where any(i.name, i.description) like %:text%")
+    /*@Query(" select i from Item i " +
+            "where upper(i.name) like upper(concat('%', :text, '%')) " +
+            " or upper(i.description) like upper(concat('%', :text, '%'))")*/
     @Query(value ="select * from items where name ilike :text or description ilike :text", nativeQuery = true)
     List<Item> findByText(@Param(value = "text") String text);
 
