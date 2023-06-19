@@ -183,11 +183,9 @@ class UserControllerTest {
 
     @Test
     void shouldDelete() throws Exception {
-        when(service.delete(1L)).thenReturn(true);
         this.mockMvc.perform(delete(URL + "/1"))
                 .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().string("true"));
+                .andExpect(status().isOk());
 
     }
 }

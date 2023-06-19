@@ -1,19 +1,17 @@
 package ru.practicum.shareit.user.repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import ru.practicum.shareit.user.model.User;
 
-import java.util.List;
+public interface UserRepository extends JpaRepository<User, Long>, CrudRepository<User, Long> {
 
-public interface UserRepository {
-    List<User> findAll();
-
-    User findById(long id);
-
-    User add(User user);
-
-    User update(User user);
-
-    boolean delete(long id);
-
-    boolean isEmailExist(String email);
+    @Modifying
+    @Query("update User u set u.name = :name, u.email = :email where u.id = :id")
+    User update(@Param(value = "id") long id,
+                @Param(value = "name") String name,
+                @Param(value = "email") String email);
 }

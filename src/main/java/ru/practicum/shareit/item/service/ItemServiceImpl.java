@@ -7,6 +7,7 @@ import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import javax.validation.ValidationException;
@@ -17,24 +18,26 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class ItemServiceImpl implements ItemService {
-    private final ItemRepository repo;
+    private final ItemRepository repository;
     private final UserRepository userRepo;
 
-    public ItemServiceImpl(ItemRepository repo, UserRepository userRepo) {
-        this.repo = repo;
+    public ItemServiceImpl(ItemRepository repository, UserRepository userRepo) {
+        this.repository = repository;
         this.userRepo = userRepo;
     }
 
     @Override
     public List<ItemDto> findAllByUserId(long userId) {
         userRepo.findById(userId);
-        return repo.findAllByUserId(userId).stream()
+        return repository.findByOwnerId(userId).stream()
                 .map(ItemMapper::toItemDto).collect(Collectors.toList());
     }
 
     @Override
     public ItemDto findById(long itemId) {
-        return ItemMapper.toItemDto(repo.findById(itemId));
+        Item item = repository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException(String.format("Вещь с id %d не найдена", itemId)));
+        return ItemMapper.toItemDto(item);
     }
 
     @Override
@@ -42,51 +45,64 @@ public class ItemServiceImpl implements ItemService {
         if (text.isBlank()) {
             return Collections.emptyList();
         }
-        return repo.findByText(text.toLowerCase()).stream()
+        return repository.findByText(text).stream()
                 .map(ItemMapper::toItemDto).collect(Collectors.toList());
     }
 
     @Override
     public ItemDto add(long userId, ItemDto itemDto) {
-        userRepo.findById(userId);
-        return ItemMapper.toItemDto(repo.add(userId, ItemMapper.toItem(itemDto)));
+        User owner = userRepo.findById(userId)
+                .orElseThrow(() -> new NotFoundException(String.format("Пользователь с id %d не найден", userId)));
+        Item item = ItemMapper.toItem(itemDto);
+        item.setOwner(owner);
+        return ItemMapper.toItemDto(repository.save(item));
     }
 
     @Override
     public ItemDto patch(long userId, long itemId, ItemDto itemDto) {
         Item item = checkOwner(userId, itemId);
-        if (itemDto.getName() != null) {
-            if (itemDto.getName().isBlank()) {
-                throw new ValidationException("Название не может быть пустым");
-            }
-            item.setName(itemDto.getName());
+        String newName = itemDto.getName();
+        String newDescription = itemDto.getDescription();
+        Boolean newAvailable = itemDto.getAvailable();
+
+        if (newName != null) {
+            checkNotBlank(newName, "Название");
+            item.setName(newName);
         }
-        if (itemDto.getDescription() != null) {
-            if (itemDto.getDescription().isBlank()) {
-                throw new ValidationException("Описание не может быть пустым");
-            }
-            item.setDescription(itemDto.getDescription());
+        if (newDescription != null) {
+            checkNotBlank(newDescription, "Описание");
+            item.setDescription(newDescription);
         }
-        if (itemDto.getAvailable() != null) {
-            item.setAvailable(itemDto.getAvailable());
+        if (newAvailable != null) {
+            item.setAvailable(newAvailable);
         }
-        return ItemMapper.toItemDto(repo.update(item));
+        item = repository.update(itemId, item.getName(), item.getDescription(), item.isAvailable());
+        return ItemMapper.toItemDto(item);
     }
 
     @Override
     public void delete(long userId, long itemId) {
         checkOwner(userId, itemId);
-        repo.delete(userId, itemId);
+        repository.deleteById(itemId);
     }
 
     private Item checkOwner(long userId, long itemId) {
-        userRepo.findById(userId);
-        Item item = repo.findById(itemId);
+        userRepo.findById(userId)
+                .orElseThrow(() -> new NotFoundException(String.format("Пользователь с id %d не найден", userId)));
+        Item item = repository.findById(itemId)
+                .orElseThrow(() -> new NotFoundException(String.format("Вещь с id %d не найдена", itemId)));
         long ownerId = item.getOwner().getId();
         if (ownerId != userId) {
             log.warn("Пользователь с id {} не владеет вещью с id {}", userId, itemId);
             throw new NotFoundException(String.format("Пользователь с id %d не владеет вещью с id %d", userId, itemId));
         }
         return item;
+    }
+
+    private void checkNotBlank(String s, String parameterName) {
+        if (s.isBlank()) {
+            log.warn("{} не может быть пустым", parameterName);
+            throw new ValidationException(String.format("%s не может быть пустым", parameterName));
+        }
     }
 }

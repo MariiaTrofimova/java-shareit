@@ -1,5 +1,6 @@
 package ru.practicum.shareit.item;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -18,12 +19,9 @@ import static ru.practicum.shareit.validation.ValidationGroups.Update;
 @RestController
 @RequestMapping("/items")
 @Validated
+@RequiredArgsConstructor
 public class ItemController {
     private final ItemService service;
-
-    public ItemController(ItemService service) {
-        this.service = service;
-    }
 
     @GetMapping
     public List<ItemDto> findAllByUserId(@RequestHeader("X-Sharer-User-Id") long userId) {
