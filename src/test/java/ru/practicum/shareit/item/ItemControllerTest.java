@@ -10,6 +10,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.error.exception.NotFoundException;
+import ru.practicum.shareit.item.dto.ItemBookingDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
@@ -36,11 +37,17 @@ class ItemControllerTest {
 
     private ItemDto itemDto;
     private ItemDto.ItemDtoBuilder itemDtoBuilder;
+
+    private ItemBookingDto.ItemBookingDtoBuilder itemBookingDtoBuilder;
     ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     void setupBuilder() {
         itemDtoBuilder = ItemDto.builder()
+                .name("name")
+                .description("description")
+                .available(true);
+        itemBookingDtoBuilder = ItemBookingDto.builder()
                 .name("name")
                 .description("description")
                 .available(true);
@@ -64,7 +71,7 @@ class ItemControllerTest {
 
         // Single List
         when(service.findAllByUserId(1L)).thenReturn(List.of(
-                itemDtoBuilder.id(1L).build()));
+                itemBookingDtoBuilder.id(1L).build()));
         mockMvc.perform(get(URL)
                         .header("X-Sharer-User-Id", 1))
                 .andDo(print())

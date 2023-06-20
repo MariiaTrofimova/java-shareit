@@ -2,19 +2,24 @@ package ru.practicum.shareit.item.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.Booking;
+import ru.practicum.shareit.booking.BookingMapper;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.error.exception.NotFoundException;
 import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemBookingDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import javax.validation.ValidationException;
-import java.util.Collections;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,13 +29,32 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService {
     private final ItemRepository repository;
     private final UserRepository userRepo;
+    private final BookingRepository bookingRepo;
 
     @Override
-    public List<ItemDto> findAllByUserId(long userId) {
+    public List<ItemBookingDto> findAllByUserId(long userId) {
         userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("Пользователь с id %d не найден", userId)));
-        return repository.findByOwnerId(userId).stream()
-                .map(ItemMapper::toItemDto).collect(Collectors.toList());
+        List <Item> items = repository.findByOwnerId(userId);
+        List<Long> itemIds = items.stream().map(Item::getId).collect(Collectors.toList());
+
+        Map<ItemBookingDto, List<Booking>> bookings = new HashMap<>();
+        bookingRepo.findByItemIdIn(itemIds, Sort.by("start_date"))
+                .forEach(booking -> bookings.computeIfAbsent(ItemMapper.toItemDtoBooking(booking.getItem()),
+                        key -> new ArrayList<>()).add(booking));
+
+        LocalDateTime now = LocalDateTime.now();
+        bookings.forEach((key, value) -> {
+            Booking lastBooking = value.get(0);
+            for (int i = 1; i < value.size(); i++) {
+                Booking nextBooking = value.get(i);
+                if (lastBooking.getStart().isBefore(now) && (nextBooking.getStart().isAfter(now))) {
+                    key.setLastBooking(BookingMapper.toBookingDto(lastBooking));
+                    key.setNextBooking(BookingMapper.toBookingDto(nextBooking));
+                }
+            }
+        });
+        return new ArrayList<>(bookings.keySet());
     }
 
     @Override
