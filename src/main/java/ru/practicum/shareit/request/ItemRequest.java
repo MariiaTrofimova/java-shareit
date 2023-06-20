@@ -3,10 +3,11 @@ package ru.practicum.shareit.request;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * TODO Sprint add-item-requests.
@@ -27,5 +28,7 @@ public class ItemRequest {
     @ToString.Exclude
     @JoinColumn(name = "requestor_id")
     User requestor;
-    LocalDateTime created;
+
+    @CreationTimestamp
+    Instant created;
 }

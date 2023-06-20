@@ -2,10 +2,8 @@ package ru.practicum.shareit.user.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.error.exception.EmailExistException;
 import ru.practicum.shareit.error.exception.NotFoundException;
 import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -37,13 +35,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto add(UserDto userDto) {
-        try {
-            User user = repository.save(UserMapper.toUser(userDto));
-            return UserMapper.toUserDto(user);
-        } catch (DataIntegrityViolationException e) {
-            log.warn("Пользователь с email {} уже существует", userDto.getEmail());
-            throw new EmailExistException(String.format("Пользователь с email %s уже существует", userDto.getEmail()));
-        }
+        User user = UserMapper.toUser(userDto);
+        User userAdded = repository.save(user);
+        return UserMapper.toUserDto(userAdded);
     }
 
     @Override
@@ -61,12 +55,8 @@ public class UserServiceImpl implements UserService {
             checkNotBlank(newEmail, "Email");
             user.setEmail(newEmail);
         }
-        try {
-            User userUpdated = repository.update(id, user.getName(), user.getEmail());
-            return UserMapper.toUserDto(userUpdated);
-        } catch (DataIntegrityViolationException e) {
-            throw new EmailExistException(String.format("Пользователь с email %s уже существует", userDto.getEmail()));
-        }
+        user = repository.save(user);
+        return UserMapper.toUserDto(user);
     }
 
     private void checkNotBlank(String s, String parameterName) {

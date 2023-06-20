@@ -3,10 +3,11 @@ package ru.practicum.shareit.item.model;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.CreationTimestamp;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "comments")
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 @ToString
 public class Comment {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
     @Column(name = "text")
@@ -32,7 +33,8 @@ public class Comment {
     User author;
 
     @Column(name = "created")
-    LocalDateTime created;
+    @CreationTimestamp
+    Instant created;
 
     @Override
     public boolean equals(Object o) {

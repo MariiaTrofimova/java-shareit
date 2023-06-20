@@ -1,10 +1,16 @@
 package ru.practicum.shareit.booking;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingInDto;
+import ru.practicum.shareit.booking.dto.BookingOutDto;
 import ru.practicum.shareit.booking.enums.State;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.validation.ValidationGroups;
@@ -22,42 +28,47 @@ import java.util.List;
 public class BookingController {
     private final BookingService service;
 
+    private final ObjectMapper mapper = JsonMapper.builder()
+            .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+            .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE, true)
+            .build();
+
+
     @GetMapping("{bookingId}")
-    public BookingDto findById(@RequestHeader("X-Sharer-User-Id") Long userId,
-                               @PathVariable long bookingId) {
+    public BookingOutDto findById(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                  @PathVariable long bookingId) {
         return service.findById(userId, bookingId);
     }
 
     @GetMapping
-    public List<BookingDto> findByState(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                        @RequestParam (defaultValue = "ALL") State state
-    ) {
-        return service.findByState(userId, state);
-        //отсортированными по дате от более новых к более старым.
+    public List<BookingOutDto> findByState(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                           @RequestParam(defaultValue = "ALL") String state) throws JsonProcessingException {
+        State stateEnum = mapper.readValue(mapper.writeValueAsString(state), State.class);
+        return service.findByState(userId, stateEnum);
     }
 
-    //GET /bookings/owner?state={state}
-    //Получение списка бронирований для всех вещей текущего пользователя.
     @GetMapping("/owner")
-    public List<BookingDto> findByOwnerItemsAndState(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                        @RequestParam (defaultValue = "ALL") State state
-    ) {
-        return service.findByOwnerItemsAndState(userId, state);
+    public List<BookingOutDto> findByOwnerItemsAndState(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                                        @RequestParam(defaultValue = "ALL") String state
+    ) throws JsonProcessingException {
+        State stateEnum = mapper.readValue(mapper.writeValueAsString(state), State.class);
+        return service.findByOwnerItemsAndState(userId, stateEnum);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Validated(ValidationGroups.Create.class)
-    public BookingDto add(@RequestHeader("X-Sharer-User-Id") Long userId,
-                          @Valid @RequestBody BookingDto bookingDto) {
+    public BookingOutDto add(@RequestHeader("X-Sharer-User-Id") Long userId,
+                             @Valid @RequestBody BookingInDto bookingDto) {
         return service.add(userId, bookingDto);
     }
 
     @PatchMapping("/{bookingId}")
+    @ResponseStatus(HttpStatus.OK)
     @Validated(ValidationGroups.Update.class)
-    public BookingDto patch(@RequestHeader("X-Sharer-User-Id") Long userId,
-                         @PathVariable("bookingId") long bookingId,
-                         @RequestParam boolean approved) {
+    public BookingOutDto patch(@RequestHeader("X-Sharer-User-Id") Long userId,
+                               @PathVariable("bookingId") long bookingId,
+                               @RequestParam boolean approved) {
         return service.patch(userId, bookingId, approved);
     }
 

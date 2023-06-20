@@ -14,6 +14,8 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.NoHandlerFoundException;
 import ru.practicum.shareit.error.exception.EmailExistException;
 import ru.practicum.shareit.error.exception.NotFoundException;
+import ru.practicum.shareit.error.exception.OwnerBookingException;
+import ru.practicum.shareit.error.exception.UnsupportedStatusException;
 import ru.practicum.shareit.error.model.ErrorResponse;
 
 import javax.validation.ValidationException;
@@ -34,6 +36,13 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleOwnerBookingException(final OwnerBookingException e) {
+        log.error(e.getMessage(), e);
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleEmailExistException(final EmailExistException e) {
         log.error(e.getMessage(), e);
@@ -43,6 +52,13 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationException(final ValidationException e) {
+        log.error(e.getMessage(), e);
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleUnsupportedStatusException(final UnsupportedStatusException e) {
         log.error(e.getMessage(), e);
         return new ErrorResponse(e.getMessage());
     }

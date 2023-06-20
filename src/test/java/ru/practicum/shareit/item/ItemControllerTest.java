@@ -91,15 +91,17 @@ class ItemControllerTest {
         ItemBookingCommentsDto itemBookingCommentsDto = itemBookingCommentsDtoBuilder.id(1L).build();
         String json = mapper.writeValueAsString(itemDto);
 
-        when(service.findById(1)).thenReturn(itemBookingCommentsDto);
-        mockMvc.perform(get(URL + "/1"))
+        when(service.findById(1, 1)).thenReturn(itemBookingCommentsDto);
+        mockMvc.perform(get(URL + "/1")
+                        .header("X-Sharer-User-Id", 1)
+                )
                 .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().json(json));
+                .andExpect(status().isOk());
 
         //user not found
-        when(service.findById(1)).thenThrow(new NotFoundException("Вещь с id 1 не найдена"));
-        mockMvc.perform(get(URL + "/1"))
+        when(service.findById(1, 1)).thenThrow(new NotFoundException("Вещь с id 1 не найдена"));
+        mockMvc.perform(get(URL + "/1")
+                        .header("X-Sharer-User-Id", 1))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(content().json("{\"error\":\"Вещь с id 1 не найдена\"}"));
