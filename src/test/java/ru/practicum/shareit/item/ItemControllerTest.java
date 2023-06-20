@@ -10,7 +10,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.error.exception.NotFoundException;
-import ru.practicum.shareit.item.dto.ItemBookingDto;
+import ru.practicum.shareit.item.dto.ItemBookingCommentsDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
@@ -38,7 +38,7 @@ class ItemControllerTest {
     private ItemDto itemDto;
     private ItemDto.ItemDtoBuilder itemDtoBuilder;
 
-    private ItemBookingDto.ItemBookingDtoBuilder itemBookingDtoBuilder;
+    private ItemBookingCommentsDto.ItemBookingCommentsDtoBuilder itemBookingCommentsDtoBuilder;
     ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
@@ -47,7 +47,7 @@ class ItemControllerTest {
                 .name("name")
                 .description("description")
                 .available(true);
-        itemBookingDtoBuilder = ItemBookingDto.builder()
+        itemBookingCommentsDtoBuilder = ItemBookingCommentsDto.builder()
                 .name("name")
                 .description("description")
                 .available(true);
@@ -71,7 +71,7 @@ class ItemControllerTest {
 
         // Single List
         when(service.findAllByUserId(1L)).thenReturn(List.of(
-                itemBookingDtoBuilder.id(1L).build()));
+                itemBookingCommentsDtoBuilder.id(1L).build()));
         mockMvc.perform(get(URL)
                         .header("X-Sharer-User-Id", 1))
                 .andDo(print())
@@ -88,10 +88,10 @@ class ItemControllerTest {
     @Test
     void shouldFindById() throws Exception {
         //regular case
-        itemDto = itemDtoBuilder.id(1L).build();
+        ItemBookingCommentsDto itemBookingCommentsDto = itemBookingCommentsDtoBuilder.id(1L).build();
         String json = mapper.writeValueAsString(itemDto);
 
-        when(service.findById(1)).thenReturn(itemDto);
+        when(service.findById(1)).thenReturn(itemBookingCommentsDto);
         mockMvc.perform(get(URL + "/1"))
                 .andDo(print())
                 .andExpect(status().isOk())

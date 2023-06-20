@@ -5,10 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 import ru.practicum.shareit.booking.dto.BookingDto;
 
+import java.util.List;
+
 @Data
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ItemBookingDto {
+public class ItemBookingCommentsDto {
     private Long id;
     private String name;
     private String description;
@@ -16,4 +18,9 @@ public class ItemBookingDto {
     private Long requestId;
     private BookingDto lastBooking;
     private BookingDto nextBooking;
+    private List<CommentDto> comments;
+
+    public void addComment(CommentDto comment) {
+        comments.add(comment);
+    }
 }

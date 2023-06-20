@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.ItemBookingCommentsDto;
 import ru.practicum.shareit.item.dto.ItemBookingDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
@@ -25,12 +27,12 @@ public class ItemController {
     private final ItemService service;
 
     @GetMapping
-    public List<ItemBookingDto> findAllByUserId(@RequestHeader("X-Sharer-User-Id") long userId) {
+    public List<ItemBookingCommentsDto> findAllByUserId(@RequestHeader("X-Sharer-User-Id") long userId) {
         return service.findAllByUserId(userId);
     }
 
     @GetMapping("{itemId}")
-    public ItemDto findById(@PathVariable long itemId) {
+    public ItemBookingCommentsDto findById(@PathVariable long itemId) {
         return service.findById(itemId);
     }
 
@@ -60,4 +62,15 @@ public class ItemController {
                            @PathVariable long itemId) {
         service.delete(userId, itemId);
     }
+
+    //POST /items/{itemId}/comment
+    @PostMapping("/{itemId}/comment")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CommentDto addComment(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                 @Valid @RequestBody CommentDto commentDto,
+                                 @PathVariable("itemId") long itemId
+                                 ){
+        return service.addComment(userId, itemId, commentDto);
+    }
+
 }
