@@ -21,16 +21,16 @@ public class Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name ="name", nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name ="description", nullable = false)
+    @Column(name = "description", nullable = false)
     private String description;
 
     @Column(name = "available", nullable = false)
     private boolean available;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @ToString.Exclude
     @JoinColumn(name = "owner_id")
     private User owner;

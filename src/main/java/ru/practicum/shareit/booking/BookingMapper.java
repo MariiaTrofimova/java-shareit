@@ -1,37 +1,59 @@
 package ru.practicum.shareit.booking;
 
-import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingForItemsOutDto;
+import ru.practicum.shareit.booking.dto.BookingInDto;
+import ru.practicum.shareit.booking.dto.BookingOutDto;
+import ru.practicum.shareit.booking.enums.Status;
+import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.UserMapper;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 
 public class BookingMapper {
-    static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd hh:mm:ss").withZone(ZoneOffset.UTC);
 
-    public static BookingDto toBookingDto(Booking booking) {
-        String start = formatter.format(booking.getStart());
-        String end = formatter.format(booking.getStart());
-        return BookingDto.builder()
+    public static BookingOutDto toBookingDtoOut(Booking booking) {
+        LocalDateTime start = LocalDateTime.ofInstant(booking.getStart(), ZoneId.of("Europe/Moscow"));
+        LocalDateTime end = LocalDateTime.ofInstant(booking.getEnd(), ZoneId.of("Europe/Moscow"));
+        return BookingOutDto.builder()
                 .id(booking.getId())
                 .start(start)
                 .end(end)
-                .item(booking.getItem())
-                .booker(booking.getBooker())
+                .item(ItemMapper.toItemDto(booking.getItem()))
+                .booker(UserMapper.toUserDto(booking.getBooker()))
                 .status(booking.getStatus())
                 .build();
     }
 
-    public static Booking toBooking(BookingDto bookingDto) {
+    public static Booking toBooking(BookingInDto bookingDto) {
         Booking booking = new Booking();
         booking.setId(bookingDto.getId());
-        LocalDateTime start = LocalDateTime.parse(bookingDto.getStart(), formatter);
-        LocalDateTime end = LocalDateTime.parse(bookingDto.getEnd(), formatter);
+        Instant start = bookingDto.getStart().toInstant(ZoneOffset.of("+03:00"));
+        Instant end = bookingDto.getEnd().toInstant(ZoneOffset.of("+03:00"));
         booking.setStart(start);
         booking.setEnd(end);
-        booking.setBooker(bookingDto.getBooker());
-        booking.setItem(bookingDto.getItem());
-        booking.setStatus(bookingDto.getStatus());
+        Item item = new Item();
+        item.setId(bookingDto.getItemId());
+        booking.setItem(item);
+        if (bookingDto.getStatus() != null) {
+            Status status = Status.valueOf(bookingDto.getStatus().toUpperCase());
+            booking.setStatus(status);
+        }
         return booking;
+    }
+
+    public static BookingForItemsOutDto toBookingForItemsOutDto(Booking booking) {
+        LocalDateTime start = LocalDateTime.ofInstant(booking.getStart(), ZoneId.of("+0"));
+        LocalDateTime end = LocalDateTime.ofInstant(booking.getEnd(), ZoneId.of("+0"));
+        return BookingForItemsOutDto.builder()
+                .id(booking.getId())
+                .start(start)
+                .end(end)
+                .bookerId(booking.getBooker().getId())
+                .status(booking.getStatus())
+                .build();
     }
 }
