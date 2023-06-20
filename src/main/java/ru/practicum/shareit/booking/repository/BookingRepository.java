@@ -1,38 +1,41 @@
 package ru.practicum.shareit.booking.repository;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.enums.Status;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
-public interface BookingRepository extends JpaRepository<Booking, Long>{
-    List<Booking> findByBookerId(Long bookerId, Sort sort);
+@Repository
+public interface BookingRepository extends JpaRepository<Booking, Long>, CrudRepository<Booking, Long>,
+        PagingAndSortingRepository<Booking, Long> {
+    List<Booking> findByBookerIdOrderByStartDesc(Long bookerId);
 
-    List<Booking> findByBookerIdAndEndIsBefore(Long bookerId, LocalDateTime end, Sort sort);
+    List<Booking> findByBookerIdAndEndIsBeforeOrderByStartDesc(Long bookerId, Instant end);
 
-    List<Booking> findByBookerIdAndStartIsAfter(Long userId, LocalDateTime now, Sort sort);
+    List<Booking> findByBookerIdAndStartIsAfterOrderByStartDesc(Long userId, Instant now);
 
-    List<Booking> findByBookerIdAndStartIsBeforeAndEndIsAfter(Long userId, LocalDateTime now, LocalDateTime now1, Sort sort);
+    List<Booking> findByBookerIdAndStartIsBeforeAndEndIsAfterOrderByStartDesc(Long userId, Instant now, Instant now1);
 
-    List<Booking> findByBookerIdAndStatus(Long userId, Status status, Sort sort);
+    List<Booking> findByBookerIdAndStatusOrderByStartDesc(Long userId, Status status);
 
-    List<Booking> findByItemIdIn(List<Long> itemIds, Sort sort);
+    List<Booking> findByItemIdInOrderByStartDesc(List<Long> itemIds);
 
-    List<Booking> findByItemIdInAndEndIsBefore(List<Long> itemIds, LocalDateTime now, Sort sort);
+    List<Booking> findByItemIdInAndEndIsBeforeOrderByStartDesc(List<Long> itemIds, Instant now);
 
-    List<Booking> findByItemIdInAndStartIsAfter(List<Long> itemIds, LocalDateTime now, Sort sort);
+    List<Booking> findByItemIdInAndStartIsAfterOrderByStartDesc(List<Long> itemIds, Instant now);
 
-    List<Booking> findByItemIdInAndStartIsBeforeAndEndIsAfter(List<Long> itemIds, LocalDateTime now, LocalDateTime now1, Sort sort);
+    List<Booking> findByItemIdInAndStartIsBeforeAndEndIsAfterOrderByStartDesc(List<Long> itemIds, Instant now, Instant now1);
 
-    List<Booking> findByItemIdInAndStatus(List<Long> itemIds, Status status, Sort sort);
+    List<Booking> findByItemIdInAndStatusOrderByStartDesc(List<Long> itemIds, Status status);
 
-    @Modifying
-    @Query("update Booking b set b.status = :status where b.id = :id")
-    Booking updateStatus(@Param(value = "id") long id, @Param(value = "status") Status status);
+    List<Booking> findByItemIdAndStatusOrStatusOrderByStartAsc(Long id, Status status, Status status1);
+
+    List<Booking> findByItemIdInAndStatusOrStatusOrderByStartAsc(List<Long> itemIds, Status status, Status status1);
+
+    List<Booking> findByBookerIdAndStatusOrderByStart(Long userId, Status status);
 }

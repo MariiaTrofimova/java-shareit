@@ -16,14 +16,14 @@ public class UserMapper {
                 .build();
     }
 
-    public static List<UserDto> toUserDto(Collection<User> users){
+    public static List<UserDto> toUserDto(Collection<User> users) {
         return users.stream().map(UserMapper::toUserDto).collect(Collectors.toList());
     }
 
     public static User toUser(UserDto userDto) {
         User user = new User();
         user.setId(userDto.getId());
-        user.setName(user.getName());
+        user.setName(userDto.getName());
         user.setEmail(userDto.getEmail());
         return user;
     }
