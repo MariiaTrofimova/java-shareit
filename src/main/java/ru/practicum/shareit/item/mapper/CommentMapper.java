@@ -9,6 +9,7 @@ import java.time.ZoneOffset;
 
 public class CommentMapper {
     private static final ZoneOffset ZONE_OFFSET = OffsetDateTime.now().getOffset();
+
     public static CommentDto toCommentDto(Comment comment) {
         LocalDateTime created = LocalDateTime.ofInstant(comment.getCreated(), ZONE_OFFSET);
         return CommentDto.builder()
