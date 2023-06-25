@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS requests
     id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     description  VARCHAR(512) NOT NULL,
     requestor_id BIGINT       NOT NULL,
-    CONSTRAINT fk_bookings_to_users FOREIGN KEY (requestor_id) REFERENCES users (id) ON DELETE CASCADE
+    CONSTRAINT fk_requests_to_users FOREIGN KEY (requestor_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS items
