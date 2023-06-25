@@ -14,10 +14,10 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 
 public class BookingMapper {
-
+    private static final ZoneId ZONE_ID = ZoneId.of("UTC");
     public static BookingOutDto toBookingDtoOut(Booking booking) {
-        LocalDateTime start = LocalDateTime.ofInstant(booking.getStart(), ZoneId.of("Europe/Moscow"));
-        LocalDateTime end = LocalDateTime.ofInstant(booking.getEnd(), ZoneId.of("Europe/Moscow"));
+        LocalDateTime start = LocalDateTime.ofInstant(booking.getStart(), ZONE_ID);
+        LocalDateTime end = LocalDateTime.ofInstant(booking.getEnd(), ZONE_ID);
         return BookingOutDto.builder()
                 .id(booking.getId())
                 .start(start)
@@ -31,8 +31,8 @@ public class BookingMapper {
     public static Booking toBooking(BookingInDto bookingDto) {
         Booking booking = new Booking();
         booking.setId(bookingDto.getId());
-        Instant start = bookingDto.getStart().toInstant(ZoneOffset.of("+03:00"));
-        Instant end = bookingDto.getEnd().toInstant(ZoneOffset.of("+03:00"));
+        Instant start = bookingDto.getStart().toInstant(ZoneOffset.UTC);
+        Instant end = bookingDto.getEnd().toInstant(ZoneOffset.UTC);
         booking.setStart(start);
         booking.setEnd(end);
         Item item = new Item();
@@ -46,8 +46,8 @@ public class BookingMapper {
     }
 
     public static BookingForItemsOutDto toBookingForItemsOutDto(Booking booking) {
-        LocalDateTime start = LocalDateTime.ofInstant(booking.getStart(), ZoneId.of("+0"));
-        LocalDateTime end = LocalDateTime.ofInstant(booking.getEnd(), ZoneId.of("+0"));
+        LocalDateTime start = LocalDateTime.ofInstant(booking.getStart(), ZONE_ID);
+        LocalDateTime end = LocalDateTime.ofInstant(booking.getEnd(), ZONE_ID);
         return BookingForItemsOutDto.builder()
                 .id(booking.getId())
                 .start(start)

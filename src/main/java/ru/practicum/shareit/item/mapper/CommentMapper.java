@@ -8,7 +8,7 @@ import java.time.ZoneOffset;
 
 public class CommentMapper {
     public static CommentDto toCommentDto(Comment comment) {
-        LocalDateTime created = LocalDateTime.ofInstant(comment.getCreated(), ZoneOffset.of("+03:00"));
+        LocalDateTime created = LocalDateTime.ofInstant(comment.getCreated(), ZoneOffset.UTC);
         return CommentDto.builder()
                 .id(comment.getId())
                 .text(comment.getText())
