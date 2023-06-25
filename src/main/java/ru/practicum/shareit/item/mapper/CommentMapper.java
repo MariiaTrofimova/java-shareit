@@ -10,7 +10,7 @@ public class CommentMapper {
     public static CommentDto toCommentDto(Comment comment) {
         LocalDateTime created = LocalDateTime.ofInstant(comment.getCreated(), ZoneOffset.of("+03:00"));
         return CommentDto.builder()
-                .Id(comment.getId())
+                .id(comment.getId())
                 .text(comment.getText())
                 .authorName(comment.getAuthor().getName())
                 .created(created)

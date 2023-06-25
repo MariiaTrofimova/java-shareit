@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class CommentDto {
-    Long Id;
+    Long id;
     @NotBlank(message = "Текст комментария не может быть пустым")
     @Size(max = 512, message = "Текст комментария не может быть больше 512 символов")
     String text;
