@@ -15,6 +15,7 @@ import java.time.ZoneOffset;
 
 public class BookingMapper {
     private static final ZoneId ZONE_ID = ZoneId.of("UTC");
+
     public static BookingOutDto toBookingDtoOut(Booking booking) {
         LocalDateTime start = LocalDateTime.ofInstant(booking.getStart(), ZONE_ID);
         LocalDateTime end = LocalDateTime.ofInstant(booking.getEnd(), ZONE_ID);
