@@ -35,13 +35,6 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepo;
     private final ItemRepository itemRepo;
 
-    /*private final ObjectMapper mapper = JsonMapper.builder()
-            .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
-            .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE, true)
-            .build();*/
-    /*private final ObjectMapper mapper = new ObjectMapper()
-            .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE);*/
-
     @Override
     public BookingOutDto findById(Long userId, long bookingId) {
         checkUser(userId);
@@ -60,7 +53,6 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingOutDto> findByState(Long userId, State state) {
         checkUser(userId);
-        // список бронирований текущего пользователя
         List<Booking> bookings = new ArrayList<>();
         Instant now = Instant.now();
         switch (state) {
