@@ -1,6 +1,5 @@
 package ru.practicum.shareit.booking.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import ru.practicum.shareit.booking.dto.BookingInDto;
 import ru.practicum.shareit.booking.dto.BookingOutDto;
 import ru.practicum.shareit.booking.enums.State;
