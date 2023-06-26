@@ -38,7 +38,7 @@ public class BookingMapper {
         item.setId(bookingDto.getItemId());
         booking.setItem(item);
         if (bookingDto.getStatus() != null) {
-            Status status = Status.valueOf(bookingDto.getStatus().toUpperCase());
+            Status status = bookingDto.getStatus();
             booking.setStatus(status);
         }
         return booking;

@@ -1,11 +1,17 @@
 package ru.practicum.shareit.booking;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.dto.BookingInDto;
 import ru.practicum.shareit.booking.dto.BookingOutDto;
+import ru.practicum.shareit.booking.enums.State;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.validation.ValidationGroups;
 
@@ -22,6 +28,12 @@ import java.util.List;
 public class BookingController {
     private final BookingService service;
 
+    private final ObjectMapper mapper = JsonMapper.builder()
+            .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+            .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE, true)
+            .build();
+
+
     @GetMapping("{bookingId}")
     public BookingOutDto findById(@RequestHeader("X-Sharer-User-Id") Long userId,
                                   @PathVariable long bookingId) {
@@ -30,16 +42,17 @@ public class BookingController {
 
     @GetMapping
     public List<BookingOutDto> findByState(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                           @RequestParam(defaultValue = "ALL") String state
-    ) {
-        return service.findByState(userId, state);
+                                           @RequestParam(defaultValue = "ALL") String state) throws JsonProcessingException {
+        State stateEnum = mapper.readValue(mapper.writeValueAsString(state), State.class);
+        return service.findByState(userId, stateEnum);
     }
 
     @GetMapping("/owner")
     public List<BookingOutDto> findByOwnerItemsAndState(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                         @RequestParam(defaultValue = "ALL") String state
-    ) {
-        return service.findByOwnerItemsAndState(userId, state);
+    ) throws JsonProcessingException {
+        State stateEnum = mapper.readValue(mapper.writeValueAsString(state), State.class);
+        return service.findByOwnerItemsAndState(userId, stateEnum);
     }
 
     @PostMapping

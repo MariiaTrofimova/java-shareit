@@ -1,5 +1,10 @@
 package ru.practicum.shareit.booking.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -8,6 +13,7 @@ import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.dto.BookingInDto;
 import ru.practicum.shareit.booking.dto.BookingOutDto;
+import ru.practicum.shareit.booking.enums.State;
 import ru.practicum.shareit.booking.enums.Status;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.error.exception.NotFoundException;
@@ -20,6 +26,7 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import javax.validation.ValidationException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,6 +39,13 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository repository;
     private final UserRepository userRepo;
     private final ItemRepository itemRepo;
+
+    /*private final ObjectMapper mapper = JsonMapper.builder()
+            .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+            .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE, true)
+            .build();*/
+    /*private final ObjectMapper mapper = new ObjectMapper()
+            .enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE);*/
 
     @Override
     public BookingOutDto findById(Long userId, long bookingId) {
@@ -49,31 +63,31 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingOutDto> findByState(Long userId, String state) {
+    public List<BookingOutDto> findByState(Long userId, State state) {
         checkUser(userId);
         // список бронирований текущего пользователя
-        List<Booking> bookings;
+        List<Booking> bookings = new ArrayList<>();
         Instant now = Instant.now();
-        switch (state.toUpperCase()) {
-            case "ALL":
+        switch (state) {
+            case ALL:
                 bookings = repository.findByBookerIdOrderByStartDesc(userId);
                 break;
-            case "PAST":
+            case PAST:
                 bookings = repository.findByBookerIdAndEndIsBeforeOrderByStartDesc(userId, now);
                 break;
-            case "FUTURE":
+            case FUTURE:
                 bookings = repository.findByBookerIdAndStartIsAfterOrderByStartDesc(userId, now);
                 break;
-            case "CURRENT":
+            case CURRENT:
                 bookings = repository.findByBookerIdAndStartIsBeforeAndEndIsAfterOrderByStartDesc(userId, now, now);
                 break;
-            case "WAITING":
+            case WAITING:
                 bookings = repository.findByBookerIdAndStatusOrderByStartDesc(userId, Status.WAITING);
                 break;
-            case "REJECTED":
+            case REJECTED:
                 bookings = repository.findByBookerIdAndStatusOrderByStartDesc(userId, Status.REJECTED);
                 break;
-            default:
+            case UNKNOWN:
                 log.warn("Unknown state: UNSUPPORTED_STATUS");
                 throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
         }
@@ -81,7 +95,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingOutDto> findByOwnerItemsAndState(Long userId, String state) {
+    public List<BookingOutDto> findByOwnerItemsAndState(Long userId, State state) {
         checkUser(userId);
         List<Item> items = itemRepo.findByOwnerId(userId);
         if (items.isEmpty()) {
@@ -91,23 +105,23 @@ public class BookingServiceImpl implements BookingService {
         List<Booking> bookings;
         Instant now = Instant.now();
 
-        switch (state.toUpperCase()) {
-            case "ALL":
+        switch (state) {
+            case ALL:
                 bookings = repository.findByItemIdInOrderByStartDesc(itemIds);
                 break;
-            case "PAST":
+            case PAST:
                 bookings = repository.findByItemIdInAndEndIsBeforeOrderByStartDesc(itemIds, now);
                 break;
-            case "FUTURE":
+            case FUTURE:
                 bookings = repository.findByItemIdInAndStartIsAfterOrderByStartDesc(itemIds, now);
                 break;
-            case "CURRENT":
+            case CURRENT:
                 bookings = repository.findByItemIdInAndStartIsBeforeAndEndIsAfterOrderByStartDesc(itemIds, now, now);
                 break;
-            case "WAITING":
+            case WAITING:
                 bookings = repository.findByItemIdInAndStatusOrderByStartDesc(itemIds, Status.WAITING);
                 break;
-            case "REJECTED":
+            case REJECTED:
                 bookings = repository.findByItemIdInAndStatusOrderByStartDesc(itemIds, Status.REJECTED);
                 break;
             default:
