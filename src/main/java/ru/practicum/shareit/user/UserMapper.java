@@ -3,6 +3,10 @@ package ru.practicum.shareit.user;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class UserMapper {
     public static UserDto toUserDto(User user) {
         return UserDto.builder()
@@ -12,11 +16,15 @@ public class UserMapper {
                 .build();
     }
 
+    public static List<UserDto> toUserDto(Collection<User> users) {
+        return users.stream().map(UserMapper::toUserDto).collect(Collectors.toList());
+    }
+
     public static User toUser(UserDto userDto) {
-        return User.builder()
-                .id(userDto.getId())
-                .name(userDto.getName())
-                .email(userDto.getEmail())
-                .build();
+        User user = new User();
+        user.setId(userDto.getId());
+        user.setName(userDto.getName());
+        user.setEmail(userDto.getEmail());
+        return user;
     }
 }

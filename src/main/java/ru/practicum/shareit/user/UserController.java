@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,12 +20,9 @@ import static ru.practicum.shareit.validation.ValidationGroups.Update;
 @RestController
 @RequestMapping(path = "/users")
 @Validated
+@RequiredArgsConstructor
 public class UserController {
     private final UserService service;
-
-    public UserController(UserService service) {
-        this.service = service;
-    }
 
     @GetMapping
     public List<UserDto> findAll() {
@@ -51,7 +49,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public boolean delete(@PathVariable long id) {
-        return service.delete(id);
+    public void delete(@PathVariable long id) {
+        service.delete(id);
     }
 }
