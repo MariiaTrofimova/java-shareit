@@ -150,9 +150,9 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void checkBooker(Long userId, long itemId) {
-        Optional<Booking> booking = bookingRepo.findByBookerIdAndStatusOrderByStart(userId, Status.APPROVED).stream()
-                .filter(b -> b.getItem().getId() == itemId).findFirst();
-        if (booking.isEmpty() || booking.get().getStart().isAfter(Instant.now())) {
+        List<Booking> bookingsItemByUser = bookingRepo
+                .findByBookerIdAndItemIdAndStatusAndStartIsBefore(userId, itemId, Status.APPROVED, Instant.now());
+        if (bookingsItemByUser.isEmpty()) {
             log.warn("Пользователь с id {} не арендовал вещь с id {}", userId, itemId);
             throw new ValidationException(
                     String.format("Пользователь с id %s не арендовал вещь с id %s", userId, itemId));

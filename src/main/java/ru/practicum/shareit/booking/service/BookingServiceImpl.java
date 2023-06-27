@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
@@ -22,7 +23,6 @@ import ru.practicum.shareit.user.repository.UserRepository;
 import javax.validation.ValidationException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +31,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @AllArgsConstructor
 public class BookingServiceImpl implements BookingService {
+    private static final Sort SORT = Sort.by(Sort.Direction.DESC, "start");
+
     private final BookingRepository repository;
     private final UserRepository userRepo;
     private final ItemRepository itemRepo;
@@ -57,22 +59,22 @@ public class BookingServiceImpl implements BookingService {
         Instant now = Instant.now();
         switch (state) {
             case ALL:
-                bookings = repository.findByBookerIdOrderByStartDesc(userId);
+                bookings = repository.findByBookerId(userId, SORT);
                 break;
             case PAST:
-                bookings = repository.findByBookerIdAndEndIsBeforeOrderByStartDesc(userId, now);
+                bookings = repository.findByBookerIdAndEndIsBefore(userId, now, SORT);
                 break;
             case FUTURE:
-                bookings = repository.findByBookerIdAndStartIsAfterOrderByStartDesc(userId, now);
+                bookings = repository.findByBookerIdAndStartIsAfter(userId, now, SORT);
                 break;
             case CURRENT:
-                bookings = repository.findByBookerIdAndStartIsBeforeAndEndIsAfterOrderByStartDesc(userId, now, now);
+                bookings = repository.findByBookerIdAndStartIsBeforeAndEndIsAfter(userId, now, now, SORT);
                 break;
             case WAITING:
-                bookings = repository.findByBookerIdAndStatusOrderByStartDesc(userId, Status.WAITING);
+                bookings = repository.findByBookerIdAndStatus(userId, Status.WAITING, SORT);
                 break;
             case REJECTED:
-                bookings = repository.findByBookerIdAndStatusOrderByStartDesc(userId, Status.REJECTED);
+                bookings = repository.findByBookerIdAndStatus(userId, Status.REJECTED, SORT);
                 break;
             case UNKNOWN:
                 log.warn("Unknown state: UNSUPPORTED_STATUS");
@@ -84,32 +86,27 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingOutDto> findByOwnerItemsAndState(Long userId, State state) {
         checkUser(userId);
-        List<Item> items = itemRepo.findByOwnerId(userId);
-        if (items.isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<Long> itemIds = items.stream().map(Item::getId).collect(Collectors.toList());
         List<Booking> bookings;
         Instant now = Instant.now();
 
         switch (state) {
             case ALL:
-                bookings = repository.findByItemIdInOrderByStartDesc(itemIds);
+                bookings = repository.findByItemOwnerId(userId, SORT);
                 break;
             case PAST:
-                bookings = repository.findByItemIdInAndEndIsBeforeOrderByStartDesc(itemIds, now);
+                bookings = repository.findByItemOwnerIdAndEndIsBefore(userId, now, SORT);
                 break;
             case FUTURE:
-                bookings = repository.findByItemIdInAndStartIsAfterOrderByStartDesc(itemIds, now);
+                bookings = repository.findByItemOwnerIdAndStartIsAfter(userId, now, SORT);
                 break;
             case CURRENT:
-                bookings = repository.findByItemIdInAndStartIsBeforeAndEndIsAfterOrderByStartDesc(itemIds, now, now);
+                bookings = repository.findByItemOwnerIdAndStartIsBeforeAndEndIsAfter(userId, now, now, SORT);
                 break;
             case WAITING:
-                bookings = repository.findByItemIdInAndStatusOrderByStartDesc(itemIds, Status.WAITING);
+                bookings = repository.findByItemOwnerIdAndStatus(userId, Status.WAITING, SORT);
                 break;
             case REJECTED:
-                bookings = repository.findByItemIdInAndStatusOrderByStartDesc(itemIds, Status.REJECTED);
+                bookings = repository.findByItemOwnerIdAndStatus(userId, Status.REJECTED, SORT);
                 break;
             default:
                 log.warn("Unknown state: UNSUPPORTED_STATUS");
@@ -124,21 +121,29 @@ public class BookingServiceImpl implements BookingService {
         User booker = checkUser(userId);
         long itemId = bookingDto.getItemId();
         Item item = checkItem(itemId);
-        if (isOwner(userId, itemId)) {
-            log.warn("Пользователь с id {} владелец вещи с id {}", userId, item.getId());
+        if (isOwner(userId, item)) {
+            log.warn("Пользователь с id {} владелец вещи с id {}", userId, itemId);
             throw new OwnerBookingException(String.format(
-                    "Пользователь с id %d владелец вещи с id %d", userId, item.getId()));
+                    "Пользователь с id %d владелец вещи с id %d", userId, itemId));
         }
         if (!item.isAvailable()) {
-            log.warn("Вещь с id {} недоступна для бронирования", item.getId());
+            log.warn("Вещь с id {} недоступна для бронирования", itemId);
             throw new ValidationException(String.format(
-                    "Вещь с id %d  недоступна для бронирования", item.getId()));
+                    "Вещь с id %d  недоступна для бронирования", itemId));
         }
         if (!bookingDto.getEnd().isAfter(bookingDto.getStart())) {
             log.warn("Дата окончания бронирования должна быть после даты начала");
             throw new ValidationException("Дата окончания бронирования должна быть после даты начала");
         }
         Booking booking = BookingMapper.toBooking(bookingDto);
+        Instant start = booking.getStart();
+        Instant end = booking.getEnd();
+        List<Booking> bookingsAtSameTime = repository.findBookingsAtSameTime(itemId, Status.APPROVED, start, end);
+        if (!bookingsAtSameTime.isEmpty()) {
+            log.warn("Время для аренды недоступно");
+            throw new ValidationException("Время для аренды недоступно");
+        }
+
         booking.setBooker(booker);
         booking.setStatus(Status.WAITING);
         booking = repository.save(booking);
@@ -152,10 +157,11 @@ public class BookingServiceImpl implements BookingService {
         checkUser(userId);
         Booking booking = repository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException(String.format("Бронирование с id %d не найдено", bookingId)));
-        long itemId = booking.getItem().getId();
-        if (!isOwner(userId, itemId)) {
-            log.warn("Пользователь с id {} не владеет вещью с id {}", userId, itemId);
-            throw new NotFoundException(String.format("Пользователь с id %d не владеет вещью с id %d", userId, itemId));
+        Item item = booking.getItem();
+        if (!isOwner(userId, item)) {
+            log.warn("Пользователь с id {} не владеет вещью с id {}", userId, item.getId());
+            throw new NotFoundException(
+                    String.format("Пользователь с id %d не владеет вещью с id %d", userId, item.getId()));
         }
         Status status;
         if (approved) {
@@ -186,7 +192,8 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException(String.format("Вещь с id %d не найдена", itemId)));
     }
 
-    private boolean isOwner(long userId, long itemId) {
-        return itemRepo.findByOwnerId(userId).stream().anyMatch(it -> it.getId() == itemId);
+    private boolean isOwner(long userId, Item item) {
+        long ownerId = item.getOwner().getId();
+        return ownerId == userId;
     }
 }
