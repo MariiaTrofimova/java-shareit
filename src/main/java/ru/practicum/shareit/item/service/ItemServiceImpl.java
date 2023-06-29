@@ -196,14 +196,15 @@ public class ItemServiceImpl implements ItemService {
     private void addLastAndNextBookings(List<Booking> bookings, ItemBookingCommentsDto itemDto) {
         Booking lastBooking;
         Booking nextBooking = null;
+        Instant now = Instant.now();
 
-        if (bookings.get(0).getStart().isAfter(Instant.now())) {
+        if (bookings.get(0).getStart().isAfter(now)) {
             itemDto.setNextBooking(BookingMapper.toBookingForItemsOutDto(bookings.get(0)));
             return;
         } else {
             lastBooking = bookings.get(0);
         }
-        Instant now = Instant.now();
+
         for (int i = 1; i < bookings.size(); i++) {
             if (bookings.get(i).getStart().isAfter(now)) {
                 lastBooking = bookings.get(i - 1);

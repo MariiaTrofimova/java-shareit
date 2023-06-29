@@ -19,16 +19,17 @@ import java.time.Instant;
 public class ItemRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
     @Column(name = "description")
-    String description;
+    private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @ToString.Exclude
     @JoinColumn(name = "requestor_id")
-    User requestor;
+    private User requestor;
 
+    @Column(name = "created")
     @CreationTimestamp
     Instant created;
 }

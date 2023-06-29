@@ -19,4 +19,7 @@ public interface ItemRepository extends JpaRepository<Item, Long>, CrudRepositor
             " or lower(i.description) like concat('%', :text, '%')) " +
             " and i.available = true")
     List<Item> search(@Param(value = "text") String text);
+
+    List<Item> findByRequestId(long requestId);
+    List<Item> findByRequestIdIn(List<Long> requestIds);
 }

@@ -10,9 +10,6 @@ import javax.validation.constraints.Size;
 
 import static ru.practicum.shareit.validation.ValidationGroups.Create;
 
-/**
- * TODO Sprint add-controllers.
- */
 @Data
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
