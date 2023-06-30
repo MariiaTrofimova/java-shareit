@@ -45,19 +45,23 @@ public class BookingController {
     @GetMapping
     public List<BookingOutDto> findByState(@RequestHeader("X-Sharer-User-Id") Long userId,
                                            @RequestParam(defaultValue = "ALL") String state,
-                                           @RequestParam(defaultValue = "0") @Min(0) int from,
+                                           @RequestParam(defaultValue = "0") @Min(value = 0,
+                                                   message = "Индекс первого элемента не может быть отрицательным") int from,
                                            @RequestParam Optional<Integer> size) throws JsonProcessingException {
-        State stateEnum = mapper.readValue(mapper.writeValueAsString(state), State.class);
+        State stateEnum = mapper.readValue(mapper.writeValueAsString(state.toUpperCase()), State.class);
         return service.findByState(userId, stateEnum, from, size);
     }
 
     @GetMapping("/owner")
     public List<BookingOutDto> findByOwnerItemsAndState(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                         @RequestParam(defaultValue = "ALL") String state,
-                                                        @RequestParam(defaultValue = "0") @Min(0) int from,
+                                                        @RequestParam(defaultValue = "0")
+                                                        @Min(value = 0,
+                                                                message = "Индекс первого элемента не может быть отрицательным")
+                                                        int from,
                                                         @RequestParam Optional<Integer> size
     ) throws JsonProcessingException {
-        State stateEnum = mapper.readValue(mapper.writeValueAsString(state), State.class);
+        State stateEnum = mapper.readValue(mapper.writeValueAsString(state.toUpperCase()), State.class);
         return service.findByOwnerItemsAndState(userId, stateEnum, from, size);
     }
 

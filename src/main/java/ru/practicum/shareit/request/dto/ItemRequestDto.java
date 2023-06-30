@@ -29,14 +29,6 @@ public class ItemRequestDto {
 
     private final List<ItemDto> items = new ArrayList<>();
 
-    public void addItem(ItemDto item) {
-        items.add(item);
-    }
-
-    public boolean deleteItem(ItemDto item) {
-        return items.remove(item);
-    }
-
     public void addAllItems(List<ItemDto> itemsToAdd) {
         items.addAll(itemsToAdd);
     }

@@ -44,7 +44,8 @@ public class ItemController {
     @GetMapping("/search")
     public List<ItemDto> findByText(
             @RequestParam String text,
-            @RequestParam(defaultValue = "0") @Min(0) int from,
+            @RequestParam(defaultValue = "0") @Min(value = 0,
+                    message = "Индекс первого элемента не может быть отрицательным") int from,
             @RequestParam Optional<Integer> size) {
         return service.findByText(text, from, size);
     }

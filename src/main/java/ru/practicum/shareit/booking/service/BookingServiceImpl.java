@@ -58,6 +58,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingOutDto> findByState(Long userId, State state,
                                            int from, Optional<Integer> size) {
+        //Получение списка всех бронирований текущего пользователя
         checkPagingParams(from, size);
         checkUser(userId);
         List<Booking> bookings;
@@ -105,6 +106,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingOutDto> findByOwnerItemsAndState(Long userId, State state,
                                                         int from, Optional<Integer> size) {
+        //Получение списка бронирований для всех вещей текущего пользователя
         checkPagingParams(from, size);
         checkUser(userId);
         List<Booking> bookings;
