@@ -10,7 +10,9 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
+import java.util.Optional;
 
 import static ru.practicum.shareit.validation.ValidationGroups.Create;
 import static ru.practicum.shareit.validation.ValidationGroups.Update;
@@ -26,8 +28,11 @@ public class ItemController {
     private final ItemService service;
 
     @GetMapping
-    public List<ItemBookingCommentsDto> findAllByUserId(@RequestHeader("X-Sharer-User-Id") long userId) {
-        return service.findAllByUserId(userId);
+    public List<ItemBookingCommentsDto> findAllByUserId(
+            @RequestHeader("X-Sharer-User-Id") long userId,
+            @RequestParam(defaultValue = "0") int from,
+            @RequestParam Optional<Integer> size) {
+        return service.findAllByUserId(userId, from, size);
     }
 
     @GetMapping("{itemId}")
@@ -37,8 +42,11 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public List<ItemDto> findByText(@RequestParam String text) {
-        return service.findByText(text);
+    public List<ItemDto> findByText(
+            @RequestParam String text,
+            @RequestParam(defaultValue = "0") @Min(0) int from,
+            @RequestParam Optional<Integer> size) {
+        return service.findByText(text, from, size);
     }
 
     @PostMapping

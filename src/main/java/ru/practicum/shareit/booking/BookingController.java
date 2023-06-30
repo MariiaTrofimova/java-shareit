@@ -16,7 +16,9 @@ import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.validation.ValidationGroups;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * TODO Sprint add-bookings.
@@ -42,17 +44,21 @@ public class BookingController {
 
     @GetMapping
     public List<BookingOutDto> findByState(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                           @RequestParam(defaultValue = "ALL") String state) throws JsonProcessingException {
+                                           @RequestParam(defaultValue = "ALL") String state,
+                                           @RequestParam(defaultValue = "0") @Min(0) int from,
+                                           @RequestParam Optional<Integer> size) throws JsonProcessingException {
         State stateEnum = mapper.readValue(mapper.writeValueAsString(state), State.class);
-        return service.findByState(userId, stateEnum);
+        return service.findByState(userId, stateEnum, from, size);
     }
 
     @GetMapping("/owner")
     public List<BookingOutDto> findByOwnerItemsAndState(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                        @RequestParam(defaultValue = "ALL") String state
+                                                        @RequestParam(defaultValue = "ALL") String state,
+                                                        @RequestParam(defaultValue = "0") @Min(0) int from,
+                                                        @RequestParam Optional<Integer> size
     ) throws JsonProcessingException {
         State stateEnum = mapper.readValue(mapper.writeValueAsString(state), State.class);
-        return service.findByOwnerItemsAndState(userId, stateEnum);
+        return service.findByOwnerItemsAndState(userId, stateEnum, from, size);
     }
 
     @PostMapping

@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
@@ -20,6 +21,7 @@ import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.validation.Validation;
 
 import javax.validation.ValidationException;
 import java.time.Instant;
@@ -37,17 +39,23 @@ public class ItemServiceImpl implements ItemService {
     private final CommentRepository commentRepo;
 
     @Override
-    public List<ItemBookingCommentsDto> findAllByUserId(long userId) {
+    public List<ItemBookingCommentsDto> findAllByUserId(long userId, int from, Optional<Integer> sizeOptional) {
+        Validation.checkPagingParams(from, sizeOptional);
         userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("Пользователь с id %d не найден", userId)));
-        List<Item> items = repository.findByOwnerId(userId);
+        List<Item> items;
+        if (sizeOptional.isEmpty()) {
+            items = repository.findByOwnerId(userId);
+        } else {
+            int size = sizeOptional.get();
+            PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
+            items = repository.findByOwnerId(userId, page).getContent();
+        }
         if (items.isEmpty()) {
             return Collections.emptyList();
         }
         Map<Long, ItemBookingCommentsDto> itemsWithIds = new HashMap<>();
-        for (Item item : items) {
-            itemsWithIds.put(item.getId(), ItemMapper.toItemBookingCommentsDto(item));
-        }
+        items.forEach(item -> itemsWithIds.put(item.getId(), ItemMapper.toItemBookingCommentsDto(item)));
         addCommentsToItems(itemsWithIds);
         addBookingDatesToItems(itemsWithIds);
         return new ArrayList<>(itemsWithIds.values());
@@ -68,11 +76,19 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> findByText(String text) {
+    public List<ItemDto> findByText(String text, int from, Optional<Integer> sizeOptional) {
+        Validation.checkPagingParams(from, sizeOptional);
         if (text.isBlank()) {
             return Collections.emptyList();
         }
-        List<Item> items = repository.search(text.toLowerCase());
+        List<Item> items;
+        if (sizeOptional.isEmpty()) {
+            items = repository.search(text.toLowerCase());
+        } else {
+            int size = sizeOptional.get();
+            PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
+            items = repository.searchWithPaging(text.toLowerCase(), page).getContent();
+        }
         return items.stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
     }
 
@@ -94,11 +110,11 @@ public class ItemServiceImpl implements ItemService {
         Boolean newAvailable = itemDto.getAvailable();
 
         if (newName != null) {
-            checkNotBlank(newName, "Название");
+            Validation.checkNotBlank(newName, "Название");
             item.setName(newName);
         }
         if (newDescription != null) {
-            checkNotBlank(newDescription, "Описание");
+            Validation.checkNotBlank(newDescription, "Описание");
             item.setDescription(newDescription);
         }
         if (newAvailable != null) {
@@ -156,13 +172,6 @@ public class ItemServiceImpl implements ItemService {
             log.warn("Пользователь с id {} не арендовал вещь с id {}", userId, itemId);
             throw new ValidationException(
                     String.format("Пользователь с id %s не арендовал вещь с id %s", userId, itemId));
-        }
-    }
-
-    private void checkNotBlank(String s, String parameterName) {
-        if (s.isBlank()) {
-            log.warn("{} не может быть пустым", parameterName);
-            throw new ValidationException(String.format("%s не может быть пустым", parameterName));
         }
     }
 

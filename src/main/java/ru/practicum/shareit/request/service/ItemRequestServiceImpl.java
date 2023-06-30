@@ -16,8 +16,8 @@ import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.validation.Validation;
 
-import javax.validation.ValidationException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -53,24 +53,13 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public List<ItemRequestDto> findAll(long userId, int from, Optional<Integer> sizeOptional) {
-        if (from < 0) {
-            log.warn("Индекс первого элемента не может быть отрицательным");
-            throw new ValidationException("Индекс первого элемента не может быть отрицательным");
-        }
+        Validation.checkPagingParams(from, sizeOptional);
         List<ItemRequestDto> itemRequestDtos;
-        if(sizeOptional.isEmpty()) {
-            if (from != 0) {
-                log.warn("Некорректные параметры запроса");
-                throw new ValidationException("Индекс первого элемента не может быть отрицательным");
-            }
+        if (sizeOptional.isEmpty()) {
             itemRequestDtos = repository.findByRequestorIdNot(userId, SORT).stream()
                     .map(ItemRequestMapper::toItemRequestDto).collect(Collectors.toList());
         } else {
             int size = sizeOptional.get();
-            if (size <= 0) {
-                log.warn("Количество элементов для отображения должно быть положительным");
-                throw new ValidationException("Количество элементов для отображения должно быть положительным");
-            }
             PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, SORT);
             itemRequestDtos = repository.findByRequestorIdNot(userId, page)
                     .map(ItemRequestMapper::toItemRequestDto).getContent();
@@ -101,7 +90,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         List<ItemDto> itemDtos = itemRepo.findByRequestIdIn(requestIds).stream()
                 .map(ItemMapper::toItemDto).collect(Collectors.toList());
 
-        if(itemDtos.isEmpty()) {
+        if (itemDtos.isEmpty()) {
             return;
         }
         Map<Long, ItemRequestDto> requests = new HashMap<>();

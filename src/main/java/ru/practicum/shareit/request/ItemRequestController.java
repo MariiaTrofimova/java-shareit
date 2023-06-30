@@ -9,6 +9,7 @@ import ru.practicum.shareit.request.service.ItemRequestService;
 import ru.practicum.shareit.validation.ValidationGroups;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,8 +41,8 @@ public class ItemRequestController {
     @GetMapping("/all")
     public List<ItemRequestDto> findAll(
             @RequestHeader("X-Sharer-User-Id") long userId,
-            @RequestParam(defaultValue = "0") int from,
-            @RequestParam Optional<Integer> size ) {
+            @RequestParam(defaultValue = "0") @Min(0) int from,
+            @RequestParam Optional<Integer> size) {
         return service.findAll(userId, from, size);
     }
 

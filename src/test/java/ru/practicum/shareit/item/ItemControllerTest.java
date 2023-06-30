@@ -16,6 +16,7 @@ import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -61,7 +62,7 @@ class ItemControllerTest {
     @Test
     void shouldFindAllByUserId() throws Exception {
         // Empty List
-        when(service.findAllByUserId(1L)).thenReturn(new ArrayList<>());
+        when(service.findAllByUserId(1L, 0, Optional.empty())).thenReturn(new ArrayList<>());
         this.mockMvc
                 .perform(get(URL)
                         .header("X-Sharer-User-Id", 1))
@@ -70,7 +71,7 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$", hasSize(0)));
 
         // Single List
-        when(service.findAllByUserId(1L)).thenReturn(List.of(
+        when(service.findAllByUserId(1L, 0, Optional.empty())).thenReturn(List.of(
                 itemBookingCommentsDtoBuilder.id(1L).build()));
         mockMvc.perform(get(URL)
                         .header("X-Sharer-User-Id", 1))
@@ -110,7 +111,7 @@ class ItemControllerTest {
     @Test
     void shouldFindByText() throws Exception {
         // Empty List
-        when(service.findByText("")).thenReturn(new ArrayList<>());
+        when(service.findByText("", 0, Optional.empty())).thenReturn(new ArrayList<>());
         this.mockMvc
                 .perform(get(URL + "/search?text="))
                 .andDo(print())
@@ -118,7 +119,7 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$", hasSize(0)));
 
         // Single List
-        when(service.findByText("ОтВ")).thenReturn(List.of(
+        when(service.findByText("ОтВ", 0, Optional.empty())).thenReturn(List.of(
                 itemDtoBuilder.id(1L).name("Отвертка").build()));
         mockMvc.perform(get(URL + "/search?text=ОтВ"))
                 .andDo(print())

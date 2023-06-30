@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,9 +23,11 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import javax.validation.ValidationException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static ru.practicum.shareit.validation.Validation.checkPagingParams;
 
 @Service
 @Transactional(readOnly = true)
@@ -53,30 +56,46 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingOutDto> findByState(Long userId, State state) {
+    public List<BookingOutDto> findByState(Long userId, State state,
+                                           int from, Optional<Integer> size) {
+        checkPagingParams(from, size);
         checkUser(userId);
-        List<Booking> bookings = new ArrayList<>();
+        List<Booking> bookings;
         Instant now = Instant.now();
+        PageRequest page = size.map(integer -> PageRequest.of(from > 0 ? from / integer : 0, integer, SORT))
+                .orElse(null);
         switch (state) {
             case ALL:
-                bookings = repository.findByBookerId(userId, SORT);
+                bookings = size.isPresent() ?
+                        repository.findByBookerId(userId, page).getContent() :
+                        repository.findByBookerId(userId, SORT);
                 break;
             case PAST:
-                bookings = repository.findByBookerIdAndEndIsBefore(userId, now, SORT);
+                bookings = size.isPresent() ?
+                        repository.findByBookerIdAndEndIsBefore(userId, now, page).getContent() :
+                        repository.findByBookerIdAndEndIsBefore(userId, now, SORT);
                 break;
             case FUTURE:
-                bookings = repository.findByBookerIdAndStartIsAfter(userId, now, SORT);
+                bookings = size.isPresent() ?
+                        repository.findByBookerIdAndStartIsAfter(userId, now, page).getContent() :
+                        repository.findByBookerIdAndStartIsAfter(userId, now, SORT);
                 break;
             case CURRENT:
-                bookings = repository.findByBookerIdAndStartIsBeforeAndEndIsAfter(userId, now, now, SORT);
+                bookings = size.isPresent() ?
+                        repository.findByBookerIdAndStartIsBeforeAndEndIsAfter(userId, now, now, page).getContent() :
+                        repository.findByBookerIdAndStartIsBeforeAndEndIsAfter(userId, now, now, SORT);
                 break;
             case WAITING:
-                bookings = repository.findByBookerIdAndStatus(userId, Status.WAITING, SORT);
+                bookings = size.isPresent() ?
+                        repository.findByBookerIdAndStatus(userId, Status.WAITING, page).getContent() :
+                        repository.findByBookerIdAndStatus(userId, Status.WAITING, SORT);
                 break;
             case REJECTED:
-                bookings = repository.findByBookerIdAndStatus(userId, Status.REJECTED, SORT);
+                bookings = size.isPresent() ?
+                        repository.findByBookerIdAndStatus(userId, Status.REJECTED, page).getContent() :
+                        repository.findByBookerIdAndStatus(userId, Status.REJECTED, SORT);
                 break;
-            case UNKNOWN:
+            default:
                 log.warn("Unknown state: UNSUPPORTED_STATUS");
                 throw new UnsupportedStatusException("Unknown state: UNSUPPORTED_STATUS");
         }
@@ -84,29 +103,43 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingOutDto> findByOwnerItemsAndState(Long userId, State state) {
+    public List<BookingOutDto> findByOwnerItemsAndState(Long userId, State state,
+                                                        int from, Optional<Integer> size) {
+        checkPagingParams(from, size);
         checkUser(userId);
         List<Booking> bookings;
         Instant now = Instant.now();
-
+        PageRequest page = size.map(integer -> PageRequest.of(from > 0 ? from / integer : 0, integer, SORT))
+                .orElse(null);
         switch (state) {
             case ALL:
-                bookings = repository.findByItemOwnerId(userId, SORT);
+                bookings = size.isPresent() ? repository.findByItemOwnerId(userId, page).getContent() :
+                        repository.findByItemOwnerId(userId, SORT);
                 break;
             case PAST:
-                bookings = repository.findByItemOwnerIdAndEndIsBefore(userId, now, SORT);
+                bookings = size.isPresent() ?
+                        repository.findByItemOwnerIdAndEndIsBefore(userId, now, page).getContent() :
+                        repository.findByItemOwnerIdAndEndIsBefore(userId, now, SORT);
                 break;
             case FUTURE:
-                bookings = repository.findByItemOwnerIdAndStartIsAfter(userId, now, SORT);
+                bookings = size.isPresent() ?
+                        repository.findByItemOwnerIdAndStartIsAfter(userId, now, page).getContent() :
+                        repository.findByItemOwnerIdAndStartIsAfter(userId, now, SORT);
                 break;
             case CURRENT:
-                bookings = repository.findByItemOwnerIdAndStartIsBeforeAndEndIsAfter(userId, now, now, SORT);
+                bookings = size.isPresent() ?
+                        repository.findByItemOwnerIdAndStartIsBeforeAndEndIsAfter(userId, now, now, page).getContent() :
+                        repository.findByItemOwnerIdAndStartIsBeforeAndEndIsAfter(userId, now, now, SORT);
                 break;
             case WAITING:
-                bookings = repository.findByItemOwnerIdAndStatus(userId, Status.WAITING, SORT);
+                bookings = size.isPresent() ?
+                        repository.findByItemOwnerIdAndStatus(userId, Status.WAITING, page).getContent() :
+                        repository.findByItemOwnerIdAndStatus(userId, Status.WAITING, SORT);
                 break;
             case REJECTED:
-                bookings = repository.findByItemOwnerIdAndStatus(userId, Status.REJECTED, SORT);
+                bookings = size.isPresent() ?
+                        repository.findByItemOwnerIdAndStatus(userId, Status.REJECTED, page).getContent() :
+                        repository.findByItemOwnerIdAndStatus(userId, Status.REJECTED, SORT);
                 break;
             default:
                 log.warn("Unknown state: UNSUPPORTED_STATUS");
