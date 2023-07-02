@@ -1,7 +1,6 @@
 package ru.practicum.shareit.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +23,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
 class UserControllerTest {
     private static final String URL = "/users";
 
@@ -32,7 +30,7 @@ class UserControllerTest {
     ObjectMapper mapper;
 
     @MockBean
-    private final UserService service;
+    UserService service;
 
     @Autowired
     private MockMvc mvc;

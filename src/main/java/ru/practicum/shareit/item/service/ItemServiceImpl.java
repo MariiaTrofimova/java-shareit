@@ -3,6 +3,7 @@ package ru.practicum.shareit.item.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
@@ -33,6 +34,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @AllArgsConstructor
 public class ItemServiceImpl implements ItemService {
+    private static final Sort SORT = Sort.by(Sort.Direction.DESC, "created");
+
     private final ItemRepository repository;
     private final UserRepository userRepo;
     private final BookingRepository bookingRepo;
@@ -176,7 +179,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void addCommentsToItem(ItemBookingCommentsDto item) {
-        commentRepo.findAllByItemIdOrderByCreatedDesc(item.getId())
+        commentRepo.findAllByItemId(item.getId(), SORT)
                 .forEach(comment -> item.addComment(CommentMapper.toCommentDto(comment)));
     }
 
@@ -230,7 +233,7 @@ public class ItemServiceImpl implements ItemService {
     private void addCommentsToItems(Map<Long, ItemBookingCommentsDto> itemsWithId) {
         List<Long> itemIds = new ArrayList<>(itemsWithId.keySet());
 
-        commentRepo.findAllByItemIdInOrderByCreatedDesc(itemIds)
+        commentRepo.findAllByItemIdIn(itemIds, SORT)
                 .forEach(comment -> itemsWithId.get(comment.getItem().getId())
                         .addComment(CommentMapper.toCommentDto(comment)));
 
