@@ -9,7 +9,6 @@ import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.enums.Status;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -82,10 +81,10 @@ class BookingRepositoryTest {
         Status status = Status.APPROVED;
         TypedQuery<Booking> query = em.getEntityManager()
                 .createQuery("select b from Booking b where (b.item.id = :itemId) and " +
-                "(b.status = :status) and " +
-                "(b.start between :start and :end " +
-                "OR b.end between :start and :end " +
-                "OR b.start <= :start AND b.end >= :end)", Booking.class);
+                        "(b.status = :status) and " +
+                        "(b.start between :start and :end " +
+                        "OR b.end between :start and :end " +
+                        "OR b.start <= :start AND b.end >= :end)", Booking.class);
         List<Booking> bookings = query
                 .setParameter("itemId", item.getId())
                 .setParameter("status", status)

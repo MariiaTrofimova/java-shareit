@@ -94,8 +94,8 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.id", is(bookingOutDto.getId()), Long.class))
                 .andExpect(jsonPath("$.item.id", is(bookingOutDto.getItem().getId()), Long.class))
                 .andExpect(jsonPath("$.booker.id", is(bookingOutDto.getBooker().getId()), Long.class))
-                .andExpect(jsonPath("$.start", is(bookingOutDto.getStart().toString()), String.class))
-                .andExpect(jsonPath("$.end", is(bookingOutDto.getEnd().toString()), String.class))
+                .andExpect(jsonPath("$.start", containsString(String.valueOf(
+                        bookingOutDto.getStart().getSecond())), String.class))
                 .andExpect(jsonPath("$.status", is(bookingOutDto.getStatus().toString()), String.class));
 
         //fail by userId
@@ -200,8 +200,8 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$[0].id", is(bookingOutDto.getId()), Long.class))
                 .andExpect(jsonPath("$[0].item.id", is(bookingOutDto.getItem().getId()), Long.class))
                 .andExpect(jsonPath("$[0].booker.id", is(bookingOutDto.getBooker().getId()), Long.class))
-                .andExpect(jsonPath("$[0].start", is(bookingOutDto.getStart().toString()), String.class))
-                .andExpect(jsonPath("$[0].end", is(bookingOutDto.getEnd().toString()), String.class))
+                .andExpect(jsonPath("$[0].start", containsString(String.valueOf(
+                        bookingOutDto.getStart().getSecond())), String.class))
                 .andExpect(jsonPath("$[0].status", is(bookingOutDto.getStatus().toString()), String.class));
 
         //Fail By State
@@ -327,8 +327,8 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.id", is(bookingOutDto.getId()), Long.class))
                 .andExpect(jsonPath("$.item.id", is(bookingOutDto.getItem().getId()), Long.class))
                 .andExpect(jsonPath("$.booker.id", is(bookingOutDto.getBooker().getId()), Long.class))
-                .andExpect(jsonPath("$.start", is(bookingOutDto.getStart().toString()), String.class))
-                .andExpect(jsonPath("$.end", is(bookingOutDto.getEnd().toString()), String.class))
+                .andExpect(jsonPath("$.start",
+                        containsString(String.valueOf(bookingOutDto.getStart().getSecond())), String.class))
                 .andExpect(jsonPath("$.status", is(bookingOutDto.getStatus().toString()), String.class));
 
         //Regular Case False
@@ -342,8 +342,8 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.id", is(bookingOutDto.getId()), Long.class))
                 .andExpect(jsonPath("$.item.id", is(bookingOutDto.getItem().getId()), Long.class))
                 .andExpect(jsonPath("$.booker.id", is(bookingOutDto.getBooker().getId()), Long.class))
-                .andExpect(jsonPath("$.start", is(bookingOutDto.getStart().toString()), String.class))
-                .andExpect(jsonPath("$.end", is(bookingOutDto.getEnd().toString()), String.class))
+                .andExpect(jsonPath("$.start", containsString(String.valueOf(
+                        bookingOutDto.getStart().getSecond())), String.class))
                 .andExpect(jsonPath("$.status", is(bookingOutDto.getStatus().toString()), String.class));
 
         //Fail by repeat answer

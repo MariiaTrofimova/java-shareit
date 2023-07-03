@@ -53,6 +53,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public List<ItemRequestDto> findAll(long userId, int from, Optional<Integer> sizeOptional) {
+        checkUser(userId);
         Validation.checkPagingParams(from, sizeOptional);
         List<ItemRequestDto> itemRequestDtos;
         if (sizeOptional.isEmpty()) {
@@ -72,7 +73,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public ItemRequestDto findById(long userId, long requestId) {
         checkUser(userId);
         ItemRequest itemRequest = repository.findById(requestId)
-                .orElseThrow(() -> new NotFoundException(String.format("Вещь с id %d не найдена", requestId)));
+                .orElseThrow(() -> new NotFoundException(String.format("Запрос с id %d не найден", requestId)));
         ItemRequestDto requestDto = ItemRequestMapper.toItemRequestDto(itemRequest);
         List<ItemDto> items = itemRepo.findByRequestId(requestId).stream()
                 .map(ItemMapper::toItemDto).collect(Collectors.toList());

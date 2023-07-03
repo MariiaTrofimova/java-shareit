@@ -9,8 +9,8 @@ import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.validation.Validation;
 
-import javax.validation.ValidationException;
 import java.util.List;
 
 @Service
@@ -48,22 +48,15 @@ public class UserServiceImpl implements UserService {
         String newEmail = userDto.getEmail();
 
         if (newName != null) {
-            checkNotBlank(newName, "Имя");
+            Validation.checkNotBlank(newName, "Имя");
             user.setName(newName);
         }
         if (newEmail != null) {
-            checkNotBlank(newEmail, "Email");
+            Validation.checkNotBlank(newEmail, "Email");
             user.setEmail(newEmail);
         }
         user = repository.save(user);
         return UserMapper.toUserDto(user);
-    }
-
-    private void checkNotBlank(String s, String parameterName) {
-        if (s.isBlank()) {
-            log.warn("{} не может быть пустым", parameterName);
-            throw new ValidationException(String.format("%s не может быть пустым", parameterName));
-        }
     }
 
     @Override
