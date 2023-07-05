@@ -18,6 +18,7 @@ import ru.practicum.shareit.error.exception.OwnerBookingException;
 import ru.practicum.shareit.error.exception.UnsupportedStatusException;
 import ru.practicum.shareit.error.model.ErrorResponse;
 
+import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,6 +53,13 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationException(final ValidationException e) {
+        log.error(e.getMessage(), e);
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleConstraintViolationException(final ConstraintViolationException e) {
         log.error(e.getMessage(), e);
         return new ErrorResponse(e.getMessage());
     }

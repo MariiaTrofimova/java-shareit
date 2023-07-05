@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.error.exception.EmailExistException;
 import ru.practicum.shareit.error.exception.NotFoundException;
 import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -36,7 +37,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto add(UserDto userDto) {
         User user = UserMapper.toUser(userDto);
-        User userAdded = repository.save(user);
+        User userAdded;
+        try {
+            userAdded = repository.save(user);
+        } catch (RuntimeException e) {
+            String error = e.getMessage();
+            String constraint = "uq_user_email";
+            if (error.contains(constraint)) {
+                error = String.format("Пользователь с email %s уже существует", userDto.getEmail());
+                throw new EmailExistException(error);
+            }
+            throw new RuntimeException("Ошибка при передаче данных в БД");
+        }
+
         return UserMapper.toUserDto(userAdded);
     }
 

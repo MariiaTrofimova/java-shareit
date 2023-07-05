@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.practicum.shareit.error.exception.EmailExistException;
 import ru.practicum.shareit.error.exception.NotFoundException;
 import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -87,7 +88,14 @@ class UserServiceTest {
         verify(repository, times(1)).save(any());
 
         //Fail By Existing Email
-        
+        String email = user.getEmail();
+        String error = String.format("Пользователь с email %s уже существует", email);
+        when(repository.save(any())).thenThrow(new RuntimeException("uq_user_email"));
+        EmailExistException exception = assertThrows(
+                EmailExistException.class,
+                () -> service.add(userDto)
+        );
+        assertEquals(error, exception.getMessage());
     }
 
     @Test
