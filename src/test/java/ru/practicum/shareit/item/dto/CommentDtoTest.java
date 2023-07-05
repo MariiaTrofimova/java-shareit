@@ -19,7 +19,7 @@ class CommentDtoTest {
     private String text;
     private long id;
     private String authorName;
-    LocalDateTime created;
+    private LocalDateTime created;
 
     @BeforeEach
     void setup() {

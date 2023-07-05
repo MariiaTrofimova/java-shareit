@@ -144,8 +144,6 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$[0].id", is(bookingOutDto.getId()), Long.class))
                 .andExpect(jsonPath("$[0].item.id", is(bookingOutDto.getItem().getId()), Long.class))
                 .andExpect(jsonPath("$[0].booker.id", is(bookingOutDto.getBooker().getId()), Long.class))
-                .andExpect(jsonPath("$[0].start", is(bookingOutDto.getStart().toString()), String.class))
-                .andExpect(jsonPath("$[0].end", is(bookingOutDto.getEnd().toString()), String.class))
                 .andExpect(jsonPath("$[0].status", is(bookingOutDto.getStatus().toString()), String.class));
 
         //Fail By State

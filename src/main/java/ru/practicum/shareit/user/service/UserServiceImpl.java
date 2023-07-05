@@ -49,7 +49,6 @@ public class UserServiceImpl implements UserService {
             }
             throw new RuntimeException("Ошибка при передаче данных в БД");
         }
-
         return UserMapper.toUserDto(userAdded);
     }
 
