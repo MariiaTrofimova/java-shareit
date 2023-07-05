@@ -17,9 +17,6 @@ import java.util.Optional;
 import static ru.practicum.shareit.validation.ValidationGroups.Create;
 import static ru.practicum.shareit.validation.ValidationGroups.Update;
 
-/**
- * TODO Sprint add-controllers.
- */
 @RestController
 @RequestMapping("/items")
 @Validated
