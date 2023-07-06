@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.dto.BookingInDto;
@@ -24,13 +25,16 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import javax.validation.ValidationException;
-import java.time.*;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,7 +42,6 @@ class BookingServiceTest {
     private static final Sort SORT = Sort.by(Sort.Direction.DESC, "start");
     private static final Instant NOW = Instant.now();
     private static final ZoneId ZONE_ID = ZoneId.systemDefault();
-    private static final ZoneOffset ZONE_OFFSET = OffsetDateTime.now().getOffset();
 
     @Mock
     BookingRepository repository;
@@ -140,7 +143,7 @@ class BookingServiceTest {
         int from = 0;
         int size = 1;
         long userId = booker.getId();
-        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, SORT);
+        PageRequest page = PageRequest.of(0, size, SORT);
         when(userRepo.findById(userId)).thenReturn(Optional.of(booker));
 
         //Fail By Wrong State
@@ -151,12 +154,85 @@ class BookingServiceTest {
         );
         assertEquals(error, exception.getMessage());
 
-        //RegularCase
+        //State All
         when(repository.findByBookerId(userId, page)).thenReturn(new PageImpl<>(List.of(booking)));
         List<BookingOutDto> bookingOutDtos = service.findByState(userId, State.ALL, from, Optional.of(size));
+
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
         assertEquals(booking.getId(), bookingOutDtos.get(0).getId());
+
+        when(repository.findByBookerId(userId, SORT)).thenReturn(List.of(booking));
+        List<BookingOutDto> bookingOutDtosWithoutPaging = service.findByState(userId, State.ALL, from, Optional.empty());
+
+        assertNotNull(bookingOutDtosWithoutPaging);
+        assertEquals(1, bookingOutDtosWithoutPaging.size());
+        assertEquals(booking.getId(), bookingOutDtosWithoutPaging.get(0).getId());
+
+        //State PAST
+        when(repository.findByBookerIdAndEndIsBefore(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
+        when(repository.findByBookerIdAndEndIsBefore(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
+
+        bookingOutDtos = service.findByState(userId, State.PAST, from, Optional.of(size));
+        bookingOutDtosWithoutPaging = service.findByState(userId, State.PAST, from, Optional.empty());
+
+        assertNotNull(bookingOutDtos);
+        assertEquals(1, bookingOutDtos.size());
+        assertNotNull(bookingOutDtosWithoutPaging);
+        assertEquals(1, bookingOutDtosWithoutPaging.size());
+
+        //State CURRENT
+        booking.setEnd(NOW.plusSeconds(120));
+
+        when(repository.findByBookerIdAndStartIsBeforeAndEndIsAfter(anyLong(), any(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
+        when(repository.findByBookerIdAndStartIsBeforeAndEndIsAfter(anyLong(), any(), any(), (Sort) any())).thenReturn(List.of(booking));
+
+        bookingOutDtos = service.findByState(userId, State.CURRENT, from, Optional.of(size));
+        bookingOutDtosWithoutPaging = service.findByState(userId, State.CURRENT, from, Optional.empty());
+
+        assertNotNull(bookingOutDtos);
+        assertEquals(1, bookingOutDtos.size());
+        assertNotNull(bookingOutDtosWithoutPaging);
+        assertEquals(1, bookingOutDtosWithoutPaging.size());
+
+        //State FUTURE
+        booking.setStart(NOW.plusSeconds(60));
+
+        when(repository.findByBookerIdAndStartIsAfter(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
+        when(repository.findByBookerIdAndStartIsAfter(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
+
+        bookingOutDtos = service.findByState(userId, State.FUTURE, from, Optional.of(size));
+        bookingOutDtosWithoutPaging = service.findByState(userId, State.FUTURE, from, Optional.empty());
+
+        assertNotNull(bookingOutDtos);
+        assertEquals(1, bookingOutDtos.size());
+        assertNotNull(bookingOutDtosWithoutPaging);
+        assertEquals(1, bookingOutDtosWithoutPaging.size());
+
+        //STATE WAITING
+        booking.setStatus(Status.WAITING);
+
+        when(repository.findByBookerIdAndStatus(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
+        when(repository.findByBookerIdAndStatus(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
+
+        bookingOutDtos = service.findByState(userId, State.WAITING, from, Optional.of(size));
+        bookingOutDtosWithoutPaging = service.findByState(userId, State.WAITING, from, Optional.empty());
+
+        assertNotNull(bookingOutDtos);
+        assertEquals(1, bookingOutDtos.size());
+        assertNotNull(bookingOutDtosWithoutPaging);
+        assertEquals(1, bookingOutDtosWithoutPaging.size());
+
+        //SATE REJECTING
+        booking.setStatus(Status.REJECTED);
+
+        bookingOutDtos = service.findByState(userId, State.REJECTED, from, Optional.of(size));
+        bookingOutDtosWithoutPaging = service.findByState(userId, State.REJECTED, from, Optional.empty());
+
+        assertNotNull(bookingOutDtos);
+        assertEquals(1, bookingOutDtos.size());
+        assertNotNull(bookingOutDtosWithoutPaging);
+        assertEquals(1, bookingOutDtosWithoutPaging.size());
     }
 
     @Test
@@ -164,13 +240,99 @@ class BookingServiceTest {
         int from = 0;
         int size = 1;
         long userId = owner.getId();
-        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, SORT);
+        PageRequest page = PageRequest.of(0, size, SORT);
         when(userRepo.findById(userId)).thenReturn(Optional.of(owner));
+
+        //Fail By Wrong State
+        String error = "Unknown state: UNSUPPORTED_STATUS";
+        UnsupportedStatusException exception = assertThrows(
+                UnsupportedStatusException.class,
+                () -> service.findByOwnerItemsAndState(userId, State.UNKNOWN, from, Optional.of(size))
+        );
+        assertEquals(error, exception.getMessage());
+
+        //State ALL
         when(repository.findByItemOwnerId(userId, page)).thenReturn(new PageImpl<>(List.of(booking)));
+        when(repository.findByItemOwnerId(userId, SORT)).thenReturn(List.of(booking));
+
         List<BookingOutDto> bookingOutDtos = service.findByOwnerItemsAndState(userId, State.ALL, from, Optional.of(size));
+        List<BookingOutDto> bookingOutDtosWithoutPaging = service.findByOwnerItemsAndState(userId, State.ALL, from, Optional.empty());
+
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
         assertEquals(booking.getId(), bookingOutDtos.get(0).getId());
+
+        assertNotNull(bookingOutDtosWithoutPaging);
+        assertEquals(1, bookingOutDtosWithoutPaging.size());
+
+        //State PAST
+        when(repository.findByItemOwnerIdAndEndIsBefore(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
+        when(repository.findByItemOwnerIdAndEndIsBefore(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
+
+        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.PAST, from, Optional.of(size));
+        bookingOutDtosWithoutPaging = service.findByOwnerItemsAndState(userId, State.PAST, from, Optional.empty());
+
+        assertNotNull(bookingOutDtos);
+        assertEquals(1, bookingOutDtos.size());
+
+        assertNotNull(bookingOutDtosWithoutPaging);
+        assertEquals(1, bookingOutDtosWithoutPaging.size());
+
+        //STATE CURRENT
+        booking.setEnd(NOW.plusSeconds(120));
+        when(repository.findByItemOwnerIdAndStartIsBeforeAndEndIsAfter(anyLong(), any(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
+        when(repository.findByItemOwnerIdAndStartIsBeforeAndEndIsAfter(anyLong(), any(), any(), (Sort) any())).thenReturn(List.of(booking));
+
+        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.CURRENT, from, Optional.of(size));
+        bookingOutDtosWithoutPaging = service.findByOwnerItemsAndState(userId, State.CURRENT, from, Optional.empty());
+
+        assertNotNull(bookingOutDtos);
+        assertEquals(1, bookingOutDtos.size());
+
+        assertNotNull(bookingOutDtosWithoutPaging);
+        assertEquals(1, bookingOutDtosWithoutPaging.size());
+
+        //State FUTURE
+        booking.setStart(NOW.plusSeconds(60));
+        when(repository.findByItemOwnerIdAndStartIsAfter(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
+        when(repository.findByItemOwnerIdAndStartIsAfter(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
+
+        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.FUTURE, from, Optional.of(size));
+        bookingOutDtosWithoutPaging = service.findByOwnerItemsAndState(userId, State.FUTURE, from, Optional.empty());
+
+        assertNotNull(bookingOutDtos);
+        assertEquals(1, bookingOutDtos.size());
+
+        assertNotNull(bookingOutDtosWithoutPaging);
+        assertEquals(1, bookingOutDtosWithoutPaging.size());
+
+        //State WAITING
+        booking.setStatus(Status.WAITING);
+        when(repository.findByItemOwnerIdAndStatus(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
+        when(repository.findByItemOwnerIdAndStatus(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
+
+        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.WAITING, from, Optional.of(size));
+        bookingOutDtosWithoutPaging = service.findByOwnerItemsAndState(userId, State.WAITING, from, Optional.empty());
+
+        assertNotNull(bookingOutDtos);
+        assertEquals(1, bookingOutDtos.size());
+
+        assertNotNull(bookingOutDtosWithoutPaging);
+        assertEquals(1, bookingOutDtosWithoutPaging.size());
+
+        //State REJECT
+        booking.setStatus(Status.REJECTED);
+        when(repository.findByItemOwnerIdAndStatus(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
+        when(repository.findByItemOwnerIdAndStatus(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
+
+        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.REJECTED, from, Optional.of(size));
+        bookingOutDtosWithoutPaging = service.findByOwnerItemsAndState(userId, State.REJECTED, from, Optional.empty());
+
+        assertNotNull(bookingOutDtos);
+        assertEquals(1, bookingOutDtos.size());
+
+        assertNotNull(bookingOutDtosWithoutPaging);
+        assertEquals(1, bookingOutDtosWithoutPaging.size());
     }
 
     @Test
