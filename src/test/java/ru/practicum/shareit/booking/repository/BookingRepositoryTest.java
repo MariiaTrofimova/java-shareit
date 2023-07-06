@@ -112,5 +112,4 @@ class BookingRepositoryTest {
         assertEquals(1, bookingsFound.size());
         assertEquals(bookings.get(0).getId(), bookingsFound.get(0).getId());
     }
-
 }

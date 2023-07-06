@@ -22,7 +22,6 @@ import javax.validation.ValidationException;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -35,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = BookingController.class)
 class BookingControllerTest {
     private static final String URL = "/bookings";
+    private static final int SIZE_DEFAULT = 10;
 
     @Autowired
     ObjectMapper mapper;
@@ -120,7 +120,7 @@ class BookingControllerTest {
     @Test
     void shouldFindByState() throws Exception {
         //Empty List
-        when(service.findByState(1L, State.REJECTED, 0, Optional.empty()))
+        when(service.findByState(1L, State.REJECTED, 0, SIZE_DEFAULT))
                 .thenReturn(Collections.emptyList());
         mvc.perform(get(URL)
                         .header("X-Sharer-User-Id", 1)
@@ -131,7 +131,7 @@ class BookingControllerTest {
 
         //Single List
         bookingOutDto = builderOut.build();
-        when(service.findByState(1L, State.WAITING, 0, Optional.of(1)))
+        when(service.findByState(1L, State.WAITING, 0, 1))
                 .thenReturn(List.of(bookingOutDto));
         mvc.perform(get(URL)
                         .header("X-Sharer-User-Id", 1)
@@ -148,7 +148,7 @@ class BookingControllerTest {
 
         //Fail By State
         String error = "Unknown state: UNSUPPORTED_STATUS";
-        when(service.findByState(1L, State.UNKNOWN, 0, Optional.of(1)))
+        when(service.findByState(1L, State.UNKNOWN, 0, 1))
                 .thenThrow(new UnsupportedStatusException(error));
         mvc.perform(get(URL)
                         .header("X-Sharer-User-Id", 1)
@@ -174,7 +174,7 @@ class BookingControllerTest {
     @Test
     void shouldFindByOwnerItemsAndState() throws Exception {
         //Empty List
-        when(service.findByOwnerItemsAndState(1L, State.REJECTED, 0, Optional.empty()))
+        when(service.findByOwnerItemsAndState(1L, State.REJECTED, 0, SIZE_DEFAULT))
                 .thenReturn(Collections.emptyList());
         mvc.perform(get(URL + "/owner")
                         .header("X-Sharer-User-Id", 1)
@@ -185,7 +185,7 @@ class BookingControllerTest {
 
         //Single List
         bookingOutDto = builderOut.build();
-        when(service.findByOwnerItemsAndState(1L, State.WAITING, 0, Optional.of(1)))
+        when(service.findByOwnerItemsAndState(1L, State.WAITING, 0, 1))
                 .thenReturn(List.of(bookingOutDto));
         mvc.perform(get(URL + "/owner")
                         .header("X-Sharer-User-Id", 1)
@@ -204,7 +204,7 @@ class BookingControllerTest {
 
         //Fail By State
         String error = "Unknown state: UNSUPPORTED_STATUS";
-        when(service.findByOwnerItemsAndState(1L, State.UNKNOWN, 0, Optional.of(1)))
+        when(service.findByOwnerItemsAndState(1L, State.UNKNOWN, 0, 1))
                 .thenThrow(new UnsupportedStatusException(error));
         mvc.perform(get(URL + "/owner")
                         .header("X-Sharer-User-Id", 1)

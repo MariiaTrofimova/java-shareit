@@ -16,6 +16,7 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareit.request.dto.ItemRequestNewDto;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
@@ -83,8 +84,8 @@ class ItemRequestServiceTest {
         //Regular case
         when(repository.save(any())).thenReturn(request);
         when(userRepo.findById(requestor.getId())).thenReturn(Optional.of(requestor));
-        ItemRequestDto requestDto = service.add(requestor.getId(),
-                ItemRequestDto.builder().description("description").build());
+        ItemRequestNewDto requestDto = service.add(requestor.getId(),
+                ItemRequestNewDto.builder().description("description").build());
         assertNotNull(requestDto);
         assertEquals(request.getId(), requestDto.getId());
         verify(repository, times(1)).save(any());
@@ -98,7 +99,7 @@ class ItemRequestServiceTest {
         when(userRepo.findById(userNotFoundId)).thenThrow(new NotFoundException(error));
         NotFoundException exception = assertThrows(
                 NotFoundException.class,
-                () -> service.add(userNotFoundId, ItemRequestDto.builder().description("description").build())
+                () -> service.add(userNotFoundId, ItemRequestNewDto.builder().description("description").build())
         );
         assertEquals(error, exception.getMessage());
         verify(repository, times(0)).save(any());
@@ -121,11 +122,11 @@ class ItemRequestServiceTest {
         long userId = requestor.getId();
         int from = 0;
         int size = 1;
-        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, SORT);
+        PageRequest page = PageRequest.of(from / size, size, SORT);
         when(userRepo.findById(userId)).thenReturn(Optional.of(requestor));
         when(itemRepo.findByRequestIdIn(Collections.emptyList())).thenReturn(Collections.emptyList());
         when(repository.findByRequestorIdNot(userId, page)).thenReturn(Page.empty());
-        List<ItemRequestDto> requestDtos = service.findAll(userId, from, Optional.of(size));
+        List<ItemRequestDto> requestDtos = service.findAll(userId, from, size);
         assertNotNull(requestDtos);
         assertEquals(0, requestDtos.size());
 
@@ -133,9 +134,9 @@ class ItemRequestServiceTest {
         userId = owner.getId();
         long requestId = request.getId();
         when(userRepo.findById(userId)).thenReturn(Optional.of(owner));
-        when(itemRepo.findByRequestIdIn(List.of(request.getId()))).thenReturn(List.of(item));
+        when(itemRepo.findByRequestIdIn(List.of(requestId))).thenReturn(List.of(item));
         when(repository.findByRequestorIdNot(userId, page)).thenReturn(new PageImpl<>(List.of(request)));
-        requestDtos = service.findAll(userId, from, Optional.of(size));
+        requestDtos = service.findAll(userId, from, size);
         assertNotNull(requestDtos);
         assertEquals(1, requestDtos.size());
     }

@@ -5,14 +5,13 @@ import ru.practicum.shareit.item.dto.ItemBookingCommentsDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ItemService {
-    List<ItemBookingCommentsDto> findAllByUserId(long userId, int from, Optional<Integer> size);
+    List<ItemBookingCommentsDto> findAllByUserId(long userId, int from, int size);
 
     ItemBookingCommentsDto findById(long userId, long itemId);
 
-    List<ItemDto> findByText(String text, int from, Optional<Integer> size);
+    List<ItemDto> findByText(String text, int from, int size);
 
     ItemDto add(long userId, ItemDto itemDto);
 

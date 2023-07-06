@@ -10,12 +10,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.error.exception.NotFoundException;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareit.request.dto.ItemRequestNewDto;
 import ru.practicum.shareit.request.service.ItemRequestService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -29,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(controllers = ItemRequestController.class)
 class ItemRequestControllerTest {
     private static final String URL = "/requests";
+    private static final int SIZE_DEFAULT = 10;
 
     @Autowired
     ObjectMapper mapper;
@@ -59,7 +60,7 @@ class ItemRequestControllerTest {
     @Test
     void shouldAddRequest() throws Exception {
         //Fail By Empty Description
-        ItemRequestDto requestIn = ItemRequestDto.builder()
+        ItemRequestNewDto requestIn = ItemRequestNewDto.builder()
                 .build();
         String json = mapper.writeValueAsString(requestIn);
         String error = "Описание не может быть пустым";
@@ -69,21 +70,25 @@ class ItemRequestControllerTest {
                         .content(json))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString(error)));
+                .andExpect(jsonPath("$.validationErrors.description", containsString(error)));
 
         //Regular case
         requestIn.setDescription("Нужен мужчина с перфоратором");
-        request = builder.build();
+        ItemRequestNewDto requestOut = ItemRequestNewDto.builder()
+                .id(1L)
+                .description("Нужен мужчина с перфоратором")
+                .created(LocalDateTime.now())
+                .build();
         json = mapper.writeValueAsString(requestIn);
-        when(service.add(1L, requestIn)).thenReturn(request);
+        when(service.add(1L, requestIn)).thenReturn(requestOut);
         mvc.perform(post(URL)
                         .header("X-Sharer-User-Id", 1)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(request.getId()), Long.class))
-                .andExpect(jsonPath("$.description", is(request.getDescription()), String.class));
+                .andExpect(jsonPath("$.id", is(requestOut.getId()), Long.class))
+                .andExpect(jsonPath("$.description", is(requestOut.getDescription()), String.class));
 
         // Wrong user
         error = String.format("Пользователь с id %d не найден", -1);
@@ -131,7 +136,7 @@ class ItemRequestControllerTest {
     @Test
     void shouldFindAll() throws Exception {
         //Empty List
-        when(service.findAll(1L, 0, Optional.empty())).thenReturn(new ArrayList<>());
+        when(service.findAll(1L, 0, SIZE_DEFAULT)).thenReturn(new ArrayList<>());
         mvc.perform(get(URL + "/all")
                         .header("X-Sharer-User-Id", 1)
                         .param("from", "0"))
@@ -141,7 +146,7 @@ class ItemRequestControllerTest {
 
         //Single List
         request = builder.build();
-        when(service.findAll(1L, 0, Optional.of(1))).thenReturn(List.of(request));
+        when(service.findAll(1L, 0, 1)).thenReturn(List.of(request));
         mvc.perform(get(URL + "/all")
                         .header("X-Sharer-User-Id", 1)
                         .param("from", "0")
@@ -154,7 +159,7 @@ class ItemRequestControllerTest {
 
         //Fail By UserId
         String error = String.format("Пользователь с id %d не найден", -1);
-        when(service.findAll(-1L, 0, Optional.of(1))).thenThrow(new NotFoundException(error));
+        when(service.findAll(-1L, 0, 1)).thenThrow(new NotFoundException(error));
         mvc.perform(get(URL + "/all")
                         .header("X-Sharer-User-Id", -1)
                         .param("from", "0")

@@ -42,18 +42,13 @@ public class ItemServiceImpl implements ItemService {
     private final CommentRepository commentRepo;
 
     @Override
-    public List<ItemBookingCommentsDto> findAllByUserId(long userId, int from, Optional<Integer> sizeOptional) {
-        Validation.checkPagingParams(from, sizeOptional);
+    public List<ItemBookingCommentsDto> findAllByUserId(long userId, int from, int size) {
         userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("Пользователь с id %d не найден", userId)));
         List<Item> items;
-        if (sizeOptional.isEmpty()) {
-            items = repository.findByOwnerId(userId);
-        } else {
-            int size = sizeOptional.get();
-            PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
-            items = repository.findByOwnerId(userId, page).getContent();
-        }
+        PageRequest page = PageRequest.of(from / size, size);
+        items = repository.findByOwnerId(userId, page).getContent();
+
         if (items.isEmpty()) {
             return Collections.emptyList();
         }
@@ -79,19 +74,12 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> findByText(String text, int from, Optional<Integer> sizeOptional) {
-        Validation.checkPagingParams(from, sizeOptional);
+    public List<ItemDto> findByText(String text, int from, int size) {
         if (text.isBlank()) {
             return Collections.emptyList();
         }
-        List<Item> items;
-        if (sizeOptional.isEmpty()) {
-            items = repository.search(text.toLowerCase());
-        } else {
-            int size = sizeOptional.get();
-            PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
-            items = repository.searchWithPaging(text.toLowerCase(), page).getContent();
-        }
+        PageRequest page = PageRequest.of(from / size, size);
+        List<Item> items = repository.searchWithPaging(text.toLowerCase(), page).getContent();
         return items.stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
     }
 

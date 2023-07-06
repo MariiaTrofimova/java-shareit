@@ -18,7 +18,6 @@ import javax.persistence.EntityManager;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -27,6 +26,8 @@ import static org.hamcrest.Matchers.*;
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ItemServiceTestIT {
+    private static final int SIZE_DEFAULT = 10;
+
     private final EntityManager em;
     private final ItemService service;
 
@@ -60,7 +61,7 @@ class ItemServiceTestIT {
         em.flush();
 
         List<ItemBookingCommentsDto> targetItems =
-                service.findAllByUserId(owner.getId(), 0, Optional.empty());
+                service.findAllByUserId(owner.getId(), 0, SIZE_DEFAULT);
 
         assertThat(targetItems, hasSize(sourceItems.size()));
         for (ItemDto sourceRequest : sourceItems) {

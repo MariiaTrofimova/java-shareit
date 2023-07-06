@@ -16,7 +16,6 @@ import ru.practicum.shareit.user.model.User;
 import javax.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -56,7 +55,7 @@ class BookingServiceTestIT {
         em.flush();
 
         List<BookingOutDto> targetBookings = service.findByState(booker.getId(),
-                State.ALL, 0, Optional.empty());
+                State.ALL, 0, 10);
 
         assertThat(targetBookings, hasSize(sourceBookings.size()));
         for (BookingInDto sourceBooking : sourceBookings) {

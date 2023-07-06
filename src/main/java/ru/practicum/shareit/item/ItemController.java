@@ -11,8 +11,8 @@ import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
 import java.util.List;
-import java.util.Optional;
 
 import static ru.practicum.shareit.validation.ValidationGroups.Create;
 import static ru.practicum.shareit.validation.ValidationGroups.Update;
@@ -28,7 +28,8 @@ public class ItemController {
     public List<ItemBookingCommentsDto> findAllByUserId(
             @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam(defaultValue = "0") int from,
-            @RequestParam Optional<Integer> size) {
+            @RequestParam(defaultValue = "10") @Positive(
+                    message = "Количество элементов для отображения должно быть положительным") int size) {
         return service.findAllByUserId(userId, from, size);
     }
 
@@ -43,7 +44,8 @@ public class ItemController {
             @RequestParam String text,
             @RequestParam(defaultValue = "0") @Min(value = 0,
                     message = "Индекс первого элемента не может быть отрицательным") int from,
-            @RequestParam Optional<Integer> size) {
+            @RequestParam(defaultValue = "10") @Positive(
+                    message = "Количество элементов для отображения должно быть положительным") int size) {
         return service.findByText(text, from, size);
     }
 

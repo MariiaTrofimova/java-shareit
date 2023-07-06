@@ -17,8 +17,8 @@ import ru.practicum.shareit.validation.ValidationGroups;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping(path = "/bookings")
@@ -44,7 +44,9 @@ public class BookingController {
                                            @RequestParam(defaultValue = "ALL") String state,
                                            @RequestParam(defaultValue = "0") @Min(value = 0,
                                                    message = "Индекс первого элемента не может быть отрицательным") int from,
-                                           @RequestParam Optional<Integer> size) throws JsonProcessingException {
+                                           @RequestParam(defaultValue = "10") @Positive(
+                                                   message = "Количество элементов для отображения должно быть положительным") int size)
+            throws JsonProcessingException {
         State stateEnum = mapper.readValue(mapper.writeValueAsString(state.toUpperCase()), State.class);
         return service.findByState(userId, stateEnum, from, size);
     }
@@ -56,8 +58,9 @@ public class BookingController {
                                                         @Min(value = 0,
                                                                 message = "Индекс первого элемента не может быть отрицательным")
                                                         int from,
-                                                        @RequestParam Optional<Integer> size
-    ) throws JsonProcessingException {
+                                                        @RequestParam(defaultValue = "10") @Positive(
+                                                                message = "Количество элементов для отображения должно быть положительным") int size)
+            throws JsonProcessingException {
         State stateEnum = mapper.readValue(mapper.writeValueAsString(state.toUpperCase()), State.class);
         return service.findByOwnerItemsAndState(userId, stateEnum, from, size);
     }

@@ -46,5 +46,4 @@ class CommentDtoTest {
 
         assertThat(result.getText()).isEqualTo(text);
     }
-
 }

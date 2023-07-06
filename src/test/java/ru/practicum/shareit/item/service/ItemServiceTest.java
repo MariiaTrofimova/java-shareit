@@ -102,10 +102,10 @@ class ItemServiceTest {
         long userId = booker.getId();
         int from = 0;
         int size = 1;
-        PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
+        PageRequest page = PageRequest.of(from / size, size);
         when(userRepo.findById(userId)).thenReturn(Optional.of(booker));
         when(repository.findByOwnerId(userId, page)).thenReturn(Page.empty());
-        List<ItemBookingCommentsDto> itemDtos = service.findAllByUserId(userId, from, Optional.of(size));
+        List<ItemBookingCommentsDto> itemDtos = service.findAllByUserId(userId, from, size);
         assertNotNull(itemDtos);
         assertEquals(0, itemDtos.size());
 
@@ -117,7 +117,7 @@ class ItemServiceTest {
         when(bookingRepo.findByItemIdInAndStatusOrStatusOrderByStartAsc(List.of(item.getId()),
                 Status.APPROVED, Status.WAITING)).thenReturn(List.of(booking));
         when(repository.findByOwnerId(userId, page)).thenReturn(new PageImpl<>(List.of(item)));
-        itemDtos = service.findAllByUserId(userId, from, Optional.of(size));
+        itemDtos = service.findAllByUserId(userId, from, size);
         assertNotNull(itemDtos);
         assertEquals(1, itemDtos.size());
         assertEquals(booking.getId(), itemDtos.get(0).getLastBooking().getId());
@@ -143,18 +143,17 @@ class ItemServiceTest {
     void findByText() {
         int from = 0;
         int size = 1;
-        //PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size);
 
         //EmptyList
         String text = "";
-        List<ItemDto> itemDtos = service.findByText(text, from, Optional.of(size));
+        List<ItemDto> itemDtos = service.findByText(text, from, size);
         assertNotNull(itemDtos);
         assertEquals(0, itemDtos.size());
 
         //Regular Case
         text = "дРелЬ";
         when(repository.searchWithPaging(any(), any())).thenReturn(new PageImpl<>(List.of(item)));
-        itemDtos = service.findByText(text, from, Optional.of(size));
+        itemDtos = service.findByText(text, from, size);
         assertNotNull(itemDtos);
         assertEquals(1, itemDtos.size());
         assertEquals(item.getId(), itemDtos.get(0).getId());

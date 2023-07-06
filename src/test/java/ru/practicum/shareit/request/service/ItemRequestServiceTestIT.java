@@ -14,7 +14,6 @@ import ru.practicum.shareit.user.model.User;
 import javax.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -23,6 +22,8 @@ import static org.hamcrest.Matchers.*;
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 class ItemRequestServiceTestIT {
+    private static final int SIZE_DEFAULT = 10;
+
     private final EntityManager em;
     private final ItemRequestService service;
 
@@ -52,7 +53,7 @@ class ItemRequestServiceTestIT {
 
         em.flush();
 
-        List<ItemRequestDto> targetRequests = service.findAll(owner.getId(), 0, Optional.empty());
+        List<ItemRequestDto> targetRequests = service.findAll(owner.getId(), 0, SIZE_DEFAULT);
 
         assertThat(targetRequests, hasSize(sourceRequests.size()));
         for (ItemRequestDto sourceRequest : sourceRequests) {

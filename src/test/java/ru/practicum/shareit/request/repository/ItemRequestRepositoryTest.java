@@ -79,29 +79,6 @@ class ItemRequestRepositoryTest {
     }
 
     @Test
-    void shouldFindByRequestorIdNotWithoutPaging() {
-        //Empty List
-        List<ItemRequest> requests = repository.findByRequestorIdNot(1L, SORT);
-        assertNotNull(requests);
-        assertEquals(0, requests.size());
-
-        //Single List
-        em.persist(requestor);
-        em.persist(request);
-        requests = repository.findByRequestorIdNot(2L, SORT);
-        assertEquals(1, requests.size());
-
-        //Sort
-        ItemRequest request2 = new ItemRequest();
-        request2.setDescription("description2");
-        request2.setRequestor(requestor);
-        em.persist(request2);
-        requests = repository.findByRequestorIdNot(2L, SORT);
-        assertEquals(2, requests.size());
-        assertEquals("description2", requests.get(0).getDescription());
-    }
-
-    @Test
     void shouldFindByRequestorIdNotWithPaging() {
         int pageNum = 0;
         int size = 1;

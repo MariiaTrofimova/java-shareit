@@ -71,13 +71,17 @@ class ItemRepositoryTest {
 
     @Test
     void findByOwnerId() {
+        int pageNum = 0;
+        int size = 1;
+        PageRequest page = PageRequest.of(pageNum, size);
+
         //Empty List
-        List<Item> items = repository.findByOwnerId(0L);
+        List<Item> items = repository.findByOwnerId(0L, page).getContent();
         assertNotNull(items);
         assertEquals(0, items.size());
 
         //Single List
-        items = repository.findByOwnerId(owner.getId());
+        items = repository.findByOwnerId(owner.getId(), page).getContent();
         assertNotNull(items);
         assertEquals(1, items.size());
         assertEquals(item.getId(), items.get(0).getId());
@@ -89,10 +93,6 @@ class ItemRepositoryTest {
         item1.setName("Дрель");
         item1.setDescription("Дрель — ваш ответ соседям с перфоратором");
         repository.save(item1);
-
-        int pageNum = 0;
-        int size = 1;
-        PageRequest page = PageRequest.of(pageNum, size);
 
         items = repository.findByOwnerId(owner.getId(), page).getContent();
         assertNotNull(items);
@@ -109,6 +109,10 @@ class ItemRepositoryTest {
 
     @Test
     void search() {
+        int pageNum = 0;
+        int size = 1;
+        PageRequest page = PageRequest.of(pageNum, size);
+
         //Empty List
         String text = "фыва";
         TypedQuery<Item> query = em.getEntityManager()
@@ -118,7 +122,7 @@ class ItemRepositoryTest {
                         " and i.available = true", Item.class);
         List<Item> items = query.setParameter("text", text).getResultList();
         assertEquals(0, items.size());
-        List<Item> itemsSearch = repository.search(text);
+        List<Item> itemsSearch = repository.searchWithPaging(text, page).getContent();
         assertNotNull(itemsSearch);
         assertEquals(0, itemsSearch.size());
 
@@ -126,7 +130,7 @@ class ItemRepositoryTest {
         text = "отв";
         items = query.setParameter("text", text).getResultList();
         assertEquals(1, items.size());
-        itemsSearch = repository.search(text);
+        itemsSearch = repository.searchWithPaging(text, page).getContent();
         assertNotNull(itemsSearch);
         assertEquals(1, itemsSearch.size());
         assertEquals(items.get(0).getId(), itemsSearch.get(0).getId());
@@ -139,9 +143,6 @@ class ItemRepositoryTest {
         item1.setDescription("Дрель — ваш ответ соседям с перфоратором");
         repository.save(item1);
 
-        int pageNum = 0;
-        int size = 1;
-        PageRequest page = PageRequest.of(pageNum, size);
         itemsSearch = repository.searchWithPaging(text, page).getContent();
         assertNotNull(itemsSearch);
         assertEquals(1, itemsSearch.size());

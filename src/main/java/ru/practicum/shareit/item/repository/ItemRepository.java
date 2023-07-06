@@ -15,15 +15,8 @@ import java.util.List;
 @Repository
 public interface ItemRepository extends JpaRepository<Item, Long>, CrudRepository<Item, Long>,
         PagingAndSortingRepository<Item, Long> {
-    List<Item> findByOwnerId(long userId);
 
     Page<Item> findByOwnerId(long userId, Pageable page);
-
-    @Query(" select i from Item i " +
-            "where (lower(i.name) like concat('%', :text, '%') " +
-            " or lower(i.description) like concat('%', :text, '%')) " +
-            " and i.available = true")
-    List<Item> search(@Param("text") String text);
 
     @Query(" select i from Item i " +
             "where (lower(i.name) like concat('%', :text, '%') " +

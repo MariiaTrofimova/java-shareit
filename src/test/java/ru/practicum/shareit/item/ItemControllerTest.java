@@ -17,7 +17,6 @@ import ru.practicum.shareit.item.service.ItemService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -29,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(ItemController.class)
 class ItemControllerTest {
     private static final String URL = "/items";
+    private static final int SIZE_DEFAULT = 10;
 
     @Autowired
     ObjectMapper mapper;
@@ -66,7 +66,7 @@ class ItemControllerTest {
     @Test
     void shouldFindAllByUserId() throws Exception {
         // Empty List
-        when(service.findAllByUserId(1L, 0, Optional.empty())).thenReturn(new ArrayList<>());
+        when(service.findAllByUserId(1L, 0, SIZE_DEFAULT)).thenReturn(new ArrayList<>());
         mvc
                 .perform(get(URL)
                         .header("X-Sharer-User-Id", 1))
@@ -76,7 +76,7 @@ class ItemControllerTest {
 
         // Single List
         ItemBookingCommentsDto itemDto = itemBookingCommentsDtoBuilder.id(1L).build();
-        when(service.findAllByUserId(1L, 0, Optional.of(1))).thenReturn(List.of(itemDto));
+        when(service.findAllByUserId(1L, 0, 1)).thenReturn(List.of(itemDto));
         mvc.perform(get(URL)
                         .header("X-Sharer-User-Id", 1)
                         .param("from", "0")
@@ -122,7 +122,7 @@ class ItemControllerTest {
     @Test
     void shouldFindByText() throws Exception {
         // Empty List
-        when(service.findByText("", 0, Optional.empty())).thenReturn(new ArrayList<>());
+        when(service.findByText("", 0, SIZE_DEFAULT)).thenReturn(new ArrayList<>());
         mvc
                 .perform(get(URL + "/search")
                         .param("text", ""))
@@ -132,7 +132,7 @@ class ItemControllerTest {
 
         // Single List
         ItemDto itemDto = itemDtoBuilder.id(1L).name("Отвертка").build();
-        when(service.findByText("ОтВ", 0, Optional.of(1))).thenReturn(List.of(itemDto));
+        when(service.findByText("ОтВ", 0, 1)).thenReturn(List.of(itemDto));
         mvc.perform(get(URL + "/search")
                         .param("text", "ОтВ")
                         .param("from", "0")

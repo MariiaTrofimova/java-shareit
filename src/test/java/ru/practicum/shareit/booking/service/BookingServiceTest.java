@@ -150,89 +150,63 @@ class BookingServiceTest {
         String error = "Unknown state: UNSUPPORTED_STATUS";
         UnsupportedStatusException exception = assertThrows(
                 UnsupportedStatusException.class,
-                () -> service.findByState(userId, State.UNKNOWN, from, Optional.of(size))
+                () -> service.findByState(userId, State.UNKNOWN, from, size)
         );
         assertEquals(error, exception.getMessage());
 
         //State All
         when(repository.findByBookerId(userId, page)).thenReturn(new PageImpl<>(List.of(booking)));
-        List<BookingOutDto> bookingOutDtos = service.findByState(userId, State.ALL, from, Optional.of(size));
+        List<BookingOutDto> bookingOutDtos = service.findByState(userId, State.ALL, from, size);
 
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
         assertEquals(booking.getId(), bookingOutDtos.get(0).getId());
 
-        when(repository.findByBookerId(userId, SORT)).thenReturn(List.of(booking));
-        List<BookingOutDto> bookingOutDtosWithoutPaging = service.findByState(userId, State.ALL, from, Optional.empty());
-
-        assertNotNull(bookingOutDtosWithoutPaging);
-        assertEquals(1, bookingOutDtosWithoutPaging.size());
-        assertEquals(booking.getId(), bookingOutDtosWithoutPaging.get(0).getId());
-
         //State PAST
         when(repository.findByBookerIdAndEndIsBefore(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
-        when(repository.findByBookerIdAndEndIsBefore(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
 
-        bookingOutDtos = service.findByState(userId, State.PAST, from, Optional.of(size));
-        bookingOutDtosWithoutPaging = service.findByState(userId, State.PAST, from, Optional.empty());
+        bookingOutDtos = service.findByState(userId, State.PAST, from, size);
 
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
-        assertNotNull(bookingOutDtosWithoutPaging);
-        assertEquals(1, bookingOutDtosWithoutPaging.size());
 
         //State CURRENT
         booking.setEnd(NOW.plusSeconds(120));
 
         when(repository.findByBookerIdAndStartIsBeforeAndEndIsAfter(anyLong(), any(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
-        when(repository.findByBookerIdAndStartIsBeforeAndEndIsAfter(anyLong(), any(), any(), (Sort) any())).thenReturn(List.of(booking));
 
-        bookingOutDtos = service.findByState(userId, State.CURRENT, from, Optional.of(size));
-        bookingOutDtosWithoutPaging = service.findByState(userId, State.CURRENT, from, Optional.empty());
+        bookingOutDtos = service.findByState(userId, State.CURRENT, from, size);
 
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
-        assertNotNull(bookingOutDtosWithoutPaging);
-        assertEquals(1, bookingOutDtosWithoutPaging.size());
 
         //State FUTURE
         booking.setStart(NOW.plusSeconds(60));
 
         when(repository.findByBookerIdAndStartIsAfter(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
-        when(repository.findByBookerIdAndStartIsAfter(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
 
-        bookingOutDtos = service.findByState(userId, State.FUTURE, from, Optional.of(size));
-        bookingOutDtosWithoutPaging = service.findByState(userId, State.FUTURE, from, Optional.empty());
+        bookingOutDtos = service.findByState(userId, State.FUTURE, from, size);
 
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
-        assertNotNull(bookingOutDtosWithoutPaging);
-        assertEquals(1, bookingOutDtosWithoutPaging.size());
 
         //STATE WAITING
         booking.setStatus(Status.WAITING);
 
         when(repository.findByBookerIdAndStatus(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
-        when(repository.findByBookerIdAndStatus(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
 
-        bookingOutDtos = service.findByState(userId, State.WAITING, from, Optional.of(size));
-        bookingOutDtosWithoutPaging = service.findByState(userId, State.WAITING, from, Optional.empty());
+        bookingOutDtos = service.findByState(userId, State.WAITING, from, size);
 
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
-        assertNotNull(bookingOutDtosWithoutPaging);
-        assertEquals(1, bookingOutDtosWithoutPaging.size());
 
         //SATE REJECTING
         booking.setStatus(Status.REJECTED);
 
-        bookingOutDtos = service.findByState(userId, State.REJECTED, from, Optional.of(size));
-        bookingOutDtosWithoutPaging = service.findByState(userId, State.REJECTED, from, Optional.empty());
+        bookingOutDtos = service.findByState(userId, State.REJECTED, from, size);
 
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
-        assertNotNull(bookingOutDtosWithoutPaging);
-        assertEquals(1, bookingOutDtosWithoutPaging.size());
     }
 
     @Test
@@ -247,92 +221,63 @@ class BookingServiceTest {
         String error = "Unknown state: UNSUPPORTED_STATUS";
         UnsupportedStatusException exception = assertThrows(
                 UnsupportedStatusException.class,
-                () -> service.findByOwnerItemsAndState(userId, State.UNKNOWN, from, Optional.of(size))
+                () -> service.findByOwnerItemsAndState(userId, State.UNKNOWN, from, size)
         );
         assertEquals(error, exception.getMessage());
 
         //State ALL
         when(repository.findByItemOwnerId(userId, page)).thenReturn(new PageImpl<>(List.of(booking)));
-        when(repository.findByItemOwnerId(userId, SORT)).thenReturn(List.of(booking));
 
-        List<BookingOutDto> bookingOutDtos = service.findByOwnerItemsAndState(userId, State.ALL, from, Optional.of(size));
-        List<BookingOutDto> bookingOutDtosWithoutPaging = service.findByOwnerItemsAndState(userId, State.ALL, from, Optional.empty());
+        List<BookingOutDto> bookingOutDtos = service.findByOwnerItemsAndState(userId, State.ALL, from, size);
 
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
         assertEquals(booking.getId(), bookingOutDtos.get(0).getId());
 
-        assertNotNull(bookingOutDtosWithoutPaging);
-        assertEquals(1, bookingOutDtosWithoutPaging.size());
-
         //State PAST
         when(repository.findByItemOwnerIdAndEndIsBefore(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
-        when(repository.findByItemOwnerIdAndEndIsBefore(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
 
-        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.PAST, from, Optional.of(size));
-        bookingOutDtosWithoutPaging = service.findByOwnerItemsAndState(userId, State.PAST, from, Optional.empty());
+        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.PAST, from, size);
 
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
-
-        assertNotNull(bookingOutDtosWithoutPaging);
-        assertEquals(1, bookingOutDtosWithoutPaging.size());
 
         //STATE CURRENT
         booking.setEnd(NOW.plusSeconds(120));
-        when(repository.findByItemOwnerIdAndStartIsBeforeAndEndIsAfter(anyLong(), any(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
-        when(repository.findByItemOwnerIdAndStartIsBeforeAndEndIsAfter(anyLong(), any(), any(), (Sort) any())).thenReturn(List.of(booking));
+        when(repository.findByItemOwnerIdAndStartIsBeforeAndEndIsAfter(anyLong(), any(), any(), (Pageable) any()))
+                .thenReturn(new PageImpl<>(List.of(booking)));
 
-        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.CURRENT, from, Optional.of(size));
-        bookingOutDtosWithoutPaging = service.findByOwnerItemsAndState(userId, State.CURRENT, from, Optional.empty());
+        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.CURRENT, from, size);
 
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
-
-        assertNotNull(bookingOutDtosWithoutPaging);
-        assertEquals(1, bookingOutDtosWithoutPaging.size());
 
         //State FUTURE
         booking.setStart(NOW.plusSeconds(60));
         when(repository.findByItemOwnerIdAndStartIsAfter(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
-        when(repository.findByItemOwnerIdAndStartIsAfter(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
 
-        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.FUTURE, from, Optional.of(size));
-        bookingOutDtosWithoutPaging = service.findByOwnerItemsAndState(userId, State.FUTURE, from, Optional.empty());
+        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.FUTURE, from, size);
 
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
-
-        assertNotNull(bookingOutDtosWithoutPaging);
-        assertEquals(1, bookingOutDtosWithoutPaging.size());
 
         //State WAITING
         booking.setStatus(Status.WAITING);
         when(repository.findByItemOwnerIdAndStatus(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
-        when(repository.findByItemOwnerIdAndStatus(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
 
-        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.WAITING, from, Optional.of(size));
-        bookingOutDtosWithoutPaging = service.findByOwnerItemsAndState(userId, State.WAITING, from, Optional.empty());
+        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.WAITING, from, size);
 
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
-
-        assertNotNull(bookingOutDtosWithoutPaging);
-        assertEquals(1, bookingOutDtosWithoutPaging.size());
 
         //State REJECT
         booking.setStatus(Status.REJECTED);
         when(repository.findByItemOwnerIdAndStatus(anyLong(), any(), (Pageable) any())).thenReturn(new PageImpl<>(List.of(booking)));
-        when(repository.findByItemOwnerIdAndStatus(anyLong(), any(), (Sort) any())).thenReturn(List.of(booking));
 
-        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.REJECTED, from, Optional.of(size));
-        bookingOutDtosWithoutPaging = service.findByOwnerItemsAndState(userId, State.REJECTED, from, Optional.empty());
+        bookingOutDtos = service.findByOwnerItemsAndState(userId, State.REJECTED, from, size);
 
         assertNotNull(bookingOutDtos);
         assertEquals(1, bookingOutDtos.size());
-
-        assertNotNull(bookingOutDtosWithoutPaging);
-        assertEquals(1, bookingOutDtosWithoutPaging.size());
     }
 
     @Test

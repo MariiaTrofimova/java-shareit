@@ -9,9 +9,6 @@ import ru.practicum.shareit.user.model.User;
 import javax.persistence.*;
 import java.time.Instant;
 
-/**
- * TODO Sprint add-item-requests.
- */
 @Getter
 @Setter
 @Entity

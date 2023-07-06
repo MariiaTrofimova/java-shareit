@@ -13,12 +13,15 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.ItemRequest;
 import ru.practicum.shareit.request.ItemRequestMapper;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareit.request.dto.ItemRequestNewDto;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
-import ru.practicum.shareit.validation.Validation;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,12 +37,12 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     @Transactional
-    public ItemRequestDto add(Long userId, ItemRequestDto itemRequestDto) {
+    public ItemRequestNewDto add(Long userId, ItemRequestNewDto itemRequestNewDto) {
         User requestor = checkUser(userId);
-        ItemRequest itemRequest = ItemRequestMapper.toItemRequest(itemRequestDto);
+        ItemRequest itemRequest = ItemRequestMapper.toItemRequest(itemRequestNewDto);
         itemRequest.setRequestor(requestor);
         itemRequest = repository.save(itemRequest);
-        return ItemRequestMapper.toItemRequestDto(itemRequest);
+        return ItemRequestMapper.toItemRequestNewDto(itemRequest);
     }
 
     @Override
@@ -52,19 +55,11 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    public List<ItemRequestDto> findAll(long userId, int from, Optional<Integer> sizeOptional) {
+    public List<ItemRequestDto> findAll(long userId, int from, int size) {
         checkUser(userId);
-        Validation.checkPagingParams(from, sizeOptional);
-        List<ItemRequestDto> itemRequestDtos;
-        if (sizeOptional.isEmpty()) {
-            itemRequestDtos = repository.findByRequestorIdNot(userId, SORT).stream()
-                    .map(ItemRequestMapper::toItemRequestDto).collect(Collectors.toList());
-        } else {
-            int size = sizeOptional.get();
-            PageRequest page = PageRequest.of(from > 0 ? from / size : 0, size, SORT);
-            itemRequestDtos = repository.findByRequestorIdNot(userId, page)
-                    .map(ItemRequestMapper::toItemRequestDto).getContent();
-        }
+        PageRequest page = PageRequest.of(from / size, size, SORT);
+        List<ItemRequestDto> itemRequestDtos = repository.findByRequestorIdNot(userId, page)
+                .map(ItemRequestMapper::toItemRequestDto).getContent();
         addItemsToRequests(itemRequestDtos);
         return itemRequestDtos;
     }
