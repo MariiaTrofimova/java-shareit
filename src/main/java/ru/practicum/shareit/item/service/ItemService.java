@@ -7,11 +7,11 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import java.util.List;
 
 public interface ItemService {
-    List<ItemBookingCommentsDto> findAllByUserId(long userId);
+    List<ItemBookingCommentsDto> findAllByUserId(long userId, int from, int size);
 
     ItemBookingCommentsDto findById(long userId, long itemId);
 
-    List<ItemDto> findByText(String text);
+    List<ItemDto> findByText(String text, int from, int size);
 
     ItemDto add(long userId, ItemDto itemDto);
 

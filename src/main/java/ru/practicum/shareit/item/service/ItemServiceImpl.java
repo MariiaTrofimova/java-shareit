@@ -2,6 +2,8 @@ package ru.practicum.shareit.item.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.Booking;
@@ -20,6 +22,7 @@ import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.validation.Validation;
 
 import javax.validation.ValidationException;
 import java.time.Instant;
@@ -31,23 +34,26 @@ import java.util.stream.Collectors;
 @Slf4j
 @AllArgsConstructor
 public class ItemServiceImpl implements ItemService {
+    private static final Sort SORT = Sort.by(Sort.Direction.DESC, "created");
+
     private final ItemRepository repository;
     private final UserRepository userRepo;
     private final BookingRepository bookingRepo;
     private final CommentRepository commentRepo;
 
     @Override
-    public List<ItemBookingCommentsDto> findAllByUserId(long userId) {
+    public List<ItemBookingCommentsDto> findAllByUserId(long userId, int from, int size) {
         userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("Пользователь с id %d не найден", userId)));
-        List<Item> items = repository.findByOwnerId(userId);
+        List<Item> items;
+        PageRequest page = PageRequest.of(from / size, size);
+        items = repository.findByOwnerId(userId, page).getContent();
+
         if (items.isEmpty()) {
             return Collections.emptyList();
         }
         Map<Long, ItemBookingCommentsDto> itemsWithIds = new HashMap<>();
-        for (Item item : items) {
-            itemsWithIds.put(item.getId(), ItemMapper.toItemBookingCommentsDto(item));
-        }
+        items.forEach(item -> itemsWithIds.put(item.getId(), ItemMapper.toItemBookingCommentsDto(item)));
         addCommentsToItems(itemsWithIds);
         addBookingDatesToItems(itemsWithIds);
         return new ArrayList<>(itemsWithIds.values());
@@ -68,11 +74,12 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> findByText(String text) {
+    public List<ItemDto> findByText(String text, int from, int size) {
         if (text.isBlank()) {
             return Collections.emptyList();
         }
-        List<Item> items = repository.search(text.toLowerCase());
+        PageRequest page = PageRequest.of(from / size, size);
+        List<Item> items = repository.searchWithPaging(text.toLowerCase(), page).getContent();
         return items.stream().map(ItemMapper::toItemDto).collect(Collectors.toList());
     }
 
@@ -94,11 +101,11 @@ public class ItemServiceImpl implements ItemService {
         Boolean newAvailable = itemDto.getAvailable();
 
         if (newName != null) {
-            checkNotBlank(newName, "Название");
+            Validation.checkNotBlank(newName, "Название");
             item.setName(newName);
         }
         if (newDescription != null) {
-            checkNotBlank(newDescription, "Описание");
+            Validation.checkNotBlank(newDescription, "Описание");
             item.setDescription(newDescription);
         }
         if (newAvailable != null) {
@@ -159,15 +166,8 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    private void checkNotBlank(String s, String parameterName) {
-        if (s.isBlank()) {
-            log.warn("{} не может быть пустым", parameterName);
-            throw new ValidationException(String.format("%s не может быть пустым", parameterName));
-        }
-    }
-
     private void addCommentsToItem(ItemBookingCommentsDto item) {
-        commentRepo.findAllByItemIdOrderByCreatedDesc(item.getId())
+        commentRepo.findAllByItemId(item.getId(), SORT)
                 .forEach(comment -> item.addComment(CommentMapper.toCommentDto(comment)));
     }
 
@@ -196,14 +196,15 @@ public class ItemServiceImpl implements ItemService {
     private void addLastAndNextBookings(List<Booking> bookings, ItemBookingCommentsDto itemDto) {
         Booking lastBooking;
         Booking nextBooking = null;
+        Instant now = Instant.now();
 
-        if (bookings.get(0).getStart().isAfter(Instant.now())) {
+        if (bookings.get(0).getStart().isAfter(now)) {
             itemDto.setNextBooking(BookingMapper.toBookingForItemsOutDto(bookings.get(0)));
             return;
         } else {
             lastBooking = bookings.get(0);
         }
-        Instant now = Instant.now();
+
         for (int i = 1; i < bookings.size(); i++) {
             if (bookings.get(i).getStart().isAfter(now)) {
                 lastBooking = bookings.get(i - 1);
@@ -220,7 +221,7 @@ public class ItemServiceImpl implements ItemService {
     private void addCommentsToItems(Map<Long, ItemBookingCommentsDto> itemsWithId) {
         List<Long> itemIds = new ArrayList<>(itemsWithId.keySet());
 
-        commentRepo.findAllByItemIdInOrderByCreatedDesc(itemIds)
+        commentRepo.findAllByItemIdIn(itemIds, SORT)
                 .forEach(comment -> itemsWithId.get(comment.getItem().getId())
                         .addComment(CommentMapper.toCommentDto(comment)));
 

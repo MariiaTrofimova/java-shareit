@@ -9,9 +9,6 @@ import ru.practicum.shareit.user.model.User;
 import javax.persistence.*;
 import java.time.Instant;
 
-/**
- * TODO Sprint add-item-requests.
- */
 @Getter
 @Setter
 @Entity
@@ -19,16 +16,17 @@ import java.time.Instant;
 public class ItemRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long id;
+    private Long id;
 
     @Column(name = "description")
-    String description;
+    private String description;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @ToString.Exclude
     @JoinColumn(name = "requestor_id")
-    User requestor;
+    private User requestor;
 
+    @Column(name = "created")
     @CreationTimestamp
     Instant created;
 }

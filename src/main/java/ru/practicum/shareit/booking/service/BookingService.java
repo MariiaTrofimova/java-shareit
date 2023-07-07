@@ -10,9 +10,9 @@ public interface BookingService {
 
     BookingOutDto findById(Long userId, long bookingId);
 
-    List<BookingOutDto> findByState(Long userId, State state);
+    List<BookingOutDto> findByState(Long userId, State state, int from, int size);
 
-    List<BookingOutDto> findByOwnerItemsAndState(Long userId, State state);
+    List<BookingOutDto> findByOwnerItemsAndState(Long userId, State state, int from, int size);
 
     BookingOutDto add(Long userId, BookingInDto bookingDto);
 

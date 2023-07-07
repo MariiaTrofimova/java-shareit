@@ -4,13 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.error.exception.EmailExistException;
 import ru.practicum.shareit.error.exception.NotFoundException;
 import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.validation.Validation;
 
-import javax.validation.ValidationException;
 import java.util.List;
 
 @Service
@@ -36,7 +37,18 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto add(UserDto userDto) {
         User user = UserMapper.toUser(userDto);
-        User userAdded = repository.save(user);
+        User userAdded;
+        try {
+            userAdded = repository.save(user);
+        } catch (RuntimeException e) {
+            String error = e.getMessage();
+            String constraint = "uq_user_email";
+            if (error.contains(constraint)) {
+                error = String.format("Пользователь с email %s уже существует", userDto.getEmail());
+                throw new EmailExistException(error);
+            }
+            throw new RuntimeException("Ошибка при передаче данных в БД");
+        }
         return UserMapper.toUserDto(userAdded);
     }
 
@@ -48,22 +60,15 @@ public class UserServiceImpl implements UserService {
         String newEmail = userDto.getEmail();
 
         if (newName != null) {
-            checkNotBlank(newName, "Имя");
+            Validation.checkNotBlank(newName, "Имя");
             user.setName(newName);
         }
         if (newEmail != null) {
-            checkNotBlank(newEmail, "Email");
+            Validation.checkNotBlank(newEmail, "Email");
             user.setEmail(newEmail);
         }
         user = repository.save(user);
         return UserMapper.toUserDto(user);
-    }
-
-    private void checkNotBlank(String s, String parameterName) {
-        if (s.isBlank()) {
-            log.warn("{} не может быть пустым", parameterName);
-            throw new ValidationException(String.format("%s не может быть пустым", parameterName));
-        }
     }
 
     @Override

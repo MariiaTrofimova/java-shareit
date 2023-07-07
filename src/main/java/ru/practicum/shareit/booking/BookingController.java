@@ -16,11 +16,10 @@ import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.validation.ValidationGroups;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
 import java.util.List;
 
-/**
- * TODO Sprint add-bookings.
- */
 @RestController
 @RequestMapping(path = "/bookings")
 @RequiredArgsConstructor
@@ -42,17 +41,28 @@ public class BookingController {
 
     @GetMapping
     public List<BookingOutDto> findByState(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                           @RequestParam(defaultValue = "ALL") String state) throws JsonProcessingException {
-        State stateEnum = mapper.readValue(mapper.writeValueAsString(state), State.class);
-        return service.findByState(userId, stateEnum);
+                                           @RequestParam(defaultValue = "ALL") String state,
+                                           @RequestParam(defaultValue = "0") @Min(value = 0,
+                                                   message = "Индекс первого элемента не может быть отрицательным") int from,
+                                           @RequestParam(defaultValue = "10") @Positive(
+                                                   message = "Количество элементов для отображения должно быть положительным") int size)
+            throws JsonProcessingException {
+        State stateEnum = mapper.readValue(mapper.writeValueAsString(state.toUpperCase()), State.class);
+        return service.findByState(userId, stateEnum, from, size);
     }
 
     @GetMapping("/owner")
     public List<BookingOutDto> findByOwnerItemsAndState(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                        @RequestParam(defaultValue = "ALL") String state
-    ) throws JsonProcessingException {
-        State stateEnum = mapper.readValue(mapper.writeValueAsString(state), State.class);
-        return service.findByOwnerItemsAndState(userId, stateEnum);
+                                                        @RequestParam(defaultValue = "ALL") String state,
+                                                        @RequestParam(defaultValue = "0")
+                                                        @Min(value = 0,
+                                                                message = "Индекс первого элемента не может быть отрицательным")
+                                                        int from,
+                                                        @RequestParam(defaultValue = "10") @Positive(
+                                                                message = "Количество элементов для отображения должно быть положительным") int size)
+            throws JsonProcessingException {
+        State stateEnum = mapper.readValue(mapper.writeValueAsString(state.toUpperCase()), State.class);
+        return service.findByOwnerItemsAndState(userId, stateEnum, from, size);
     }
 
     @PostMapping

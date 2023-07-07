@@ -10,14 +10,13 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.Positive;
 import java.util.List;
 
 import static ru.practicum.shareit.validation.ValidationGroups.Create;
 import static ru.practicum.shareit.validation.ValidationGroups.Update;
 
-/**
- * TODO Sprint add-controllers.
- */
 @RestController
 @RequestMapping("/items")
 @Validated
@@ -26,8 +25,12 @@ public class ItemController {
     private final ItemService service;
 
     @GetMapping
-    public List<ItemBookingCommentsDto> findAllByUserId(@RequestHeader("X-Sharer-User-Id") long userId) {
-        return service.findAllByUserId(userId);
+    public List<ItemBookingCommentsDto> findAllByUserId(
+            @RequestHeader("X-Sharer-User-Id") long userId,
+            @RequestParam(defaultValue = "0") int from,
+            @RequestParam(defaultValue = "10") @Positive(
+                    message = "Количество элементов для отображения должно быть положительным") int size) {
+        return service.findAllByUserId(userId, from, size);
     }
 
     @GetMapping("{itemId}")
@@ -37,8 +40,13 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public List<ItemDto> findByText(@RequestParam String text) {
-        return service.findByText(text);
+    public List<ItemDto> findByText(
+            @RequestParam String text,
+            @RequestParam(defaultValue = "0") @Min(value = 0,
+                    message = "Индекс первого элемента не может быть отрицательным") int from,
+            @RequestParam(defaultValue = "10") @Positive(
+                    message = "Количество элементов для отображения должно быть положительным") int size) {
+        return service.findByText(text, from, size);
     }
 
     @PostMapping

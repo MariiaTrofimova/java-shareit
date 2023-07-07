@@ -14,9 +14,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static ru.practicum.shareit.validation.ValidationGroups.Create;
 import static ru.practicum.shareit.validation.ValidationGroups.Update;
 
-/**
- * TODO Sprint add-controllers.
- */
 @RestController
 @RequestMapping(path = "/users")
 @Validated
