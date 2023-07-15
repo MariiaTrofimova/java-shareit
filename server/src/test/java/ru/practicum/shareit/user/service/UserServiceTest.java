@@ -12,8 +12,8 @@ import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.error.exception.ValidationException;
 
-import javax.validation.ValidationException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;

@@ -109,36 +109,6 @@ class UserControllerTest {
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(content().json(jsonAdded));
-
-        //fail name
-        userDto = userDtoBuilder.name("").build();
-        json = mapper.writeValueAsString(userDto);
-        mvc.perform(post(URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("Имя не может быть пустым")));
-
-        //fail empty email
-        userDto = userDtoBuilder.name("name").email("").build();
-        json = mapper.writeValueAsString(userDto);
-        this.mvc.perform(post(URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("E-mail не может быть пустым")));
-
-        //fail некорректный email
-        userDto = userDtoBuilder.email("email").build();
-        json = mapper.writeValueAsString(userDto);
-        this.mvc.perform(post(URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.validationErrors.email", containsString("Введен некорректный e-mail")));
     }
 
     @Test
@@ -168,16 +138,6 @@ class UserControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().json(jsonPatched));
-
-        //fail некорректный email
-        json = "{\"email\": \"patched\"}";
-        mvc.perform(patch(URL + "/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.validationErrors.email", containsString("Введен некорректный e-mail")));
-
     }
 
     @Test

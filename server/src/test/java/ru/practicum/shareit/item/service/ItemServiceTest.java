@@ -23,8 +23,8 @@ import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.error.exception.ValidationException;
 
-import javax.validation.ValidationException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;

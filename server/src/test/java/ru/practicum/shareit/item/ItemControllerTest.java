@@ -69,7 +69,9 @@ class ItemControllerTest {
         when(service.findAllByUserId(1L, 0, SIZE_DEFAULT)).thenReturn(new ArrayList<>());
         mvc
                 .perform(get(URL)
-                        .header("X-Sharer-User-Id", 1))
+                        .header("X-Sharer-User-Id", 1)
+                        .param("from", "0")
+                        .param("size", "1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
@@ -86,13 +88,6 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.size()", is(1)))
                 .andExpect(jsonPath("$[0].id", is(itemDto.getId()), Long.class))
                 .andExpect(jsonPath("$[0].name", is(itemDto.getName()), String.class));
-
-        // Header absence
-        String error = "X-Sharer-User-Id";
-        mvc.perform(get(URL))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("error", containsString(error)));
     }
 
     @Test
@@ -125,7 +120,9 @@ class ItemControllerTest {
         when(service.findByText("", 0, SIZE_DEFAULT)).thenReturn(new ArrayList<>());
         mvc
                 .perform(get(URL + "/search")
-                        .param("text", ""))
+                        .param("text", "")
+                        .param("from", "0")
+                        .param("size", "1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
@@ -162,36 +159,6 @@ class ItemControllerTest {
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(content().json(jsonAdded));
-
-        //fail name
-        itemDto = itemDtoBuilder.name("").build();
-        json = mapper.writeValueAsString(itemDto);
-        mvc.perform(post(URL)
-                        .header("X-Sharer-User-Id", 1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("Название не может быть пустым")));
-
-
-        //fail empty description
-        itemDto = itemDtoBuilder.name("name").description("").build();
-        json = mapper.writeValueAsString(itemDto);
-        mvc.perform(post(URL)
-                        .header("X-Sharer-User-Id", 1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString("Описание не может быть пустым")));
-
-        //fail header absence
-        mvc.perform(post(URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andDo(print())
-                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -267,17 +234,5 @@ class ItemControllerTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().json(json));
-
-        //Fail By Empty Text
-        commentDto.setText(null);
-        jsonIn = mapper.writeValueAsString(commentDto);
-        String error = "Текст комментария не может быть пустым";
-        mvc.perform(post(URL + "/1/comment")
-                        .header("X-Sharer-User-Id", "1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonIn))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.validationErrors.text", containsString(error)));
     }
 }

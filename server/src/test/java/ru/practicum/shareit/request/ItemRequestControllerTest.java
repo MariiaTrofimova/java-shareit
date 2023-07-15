@@ -59,27 +59,16 @@ class ItemRequestControllerTest {
 
     @Test
     void shouldAddRequest() throws Exception {
-        //Fail By Empty Description
+        //Regular case
         ItemRequestNewDto requestIn = ItemRequestNewDto.builder()
                 .build();
-        String json = mapper.writeValueAsString(requestIn);
-        String error = "Описание не может быть пустым";
-        mvc.perform(post(URL)
-                        .header("X-Sharer-User-Id", 1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.validationErrors.description", containsString(error)));
-
-        //Regular case
         requestIn.setDescription("Нужен мужчина с перфоратором");
         ItemRequestNewDto requestOut = ItemRequestNewDto.builder()
                 .id(1L)
                 .description("Нужен мужчина с перфоратором")
                 .created(LocalDateTime.now())
                 .build();
-        json = mapper.writeValueAsString(requestIn);
+        String json = mapper.writeValueAsString(requestIn);
         when(service.add(1L, requestIn)).thenReturn(requestOut);
         mvc.perform(post(URL)
                         .header("X-Sharer-User-Id", 1)
@@ -91,7 +80,7 @@ class ItemRequestControllerTest {
                 .andExpect(jsonPath("$.description", is(requestOut.getDescription()), String.class));
 
         // Wrong user
-        error = String.format("Пользователь с id %d не найден", -1);
+        String error = String.format("Пользователь с id %d не найден", -1);
         when(service.add(-1L, requestIn)).thenThrow(new NotFoundException(error));
         mvc.perform(post(URL)
                         .header("X-Sharer-User-Id", -1)
@@ -139,7 +128,8 @@ class ItemRequestControllerTest {
         when(service.findAll(1L, 0, SIZE_DEFAULT)).thenReturn(new ArrayList<>());
         mvc.perform(get(URL + "/all")
                         .header("X-Sharer-User-Id", 1)
-                        .param("from", "0"))
+                        .param("from", "0")
+                        .param("size", "1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
@@ -166,16 +156,6 @@ class ItemRequestControllerTest {
                         .param("size", "1"))
                 .andDo(print())
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error", containsString(error), String.class));
-
-        //Fail By From
-        error = "Индекс первого элемента не может быть отрицательным";
-        mvc.perform(get(URL + "/all")
-                        .header("X-Sharer-User-Id", 1)
-                        .param("from", "-1")
-                        .param("size", "1"))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", containsString(error), String.class));
     }
 

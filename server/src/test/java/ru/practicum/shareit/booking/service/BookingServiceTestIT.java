@@ -48,7 +48,7 @@ class BookingServiceTestIT {
                 .forEach(booking -> {
                     booking.setBooker(booker);
                     booking.setStatus(Status.WAITING);
-                    em.persist(booking);
+                    em.merge(booking);
                     booking.setItem(item);
                 });
 

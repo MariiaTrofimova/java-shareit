@@ -14,11 +14,9 @@ import ru.practicum.shareit.booking.enums.State;
 import ru.practicum.shareit.booking.enums.Status;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.error.exception.NotFoundException;
-import ru.practicum.shareit.error.exception.UnsupportedStatusException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.user.dto.UserDto;
 
-import javax.validation.ValidationException;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -97,24 +95,6 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.start", containsString(String.valueOf(
                         bookingOutDto.getStart().getSecond())), String.class))
                 .andExpect(jsonPath("$.status", is(bookingOutDto.getStatus().toString()), String.class));
-
-        //fail by userId
-        String error = String.format("Пользователь с id %d не найден", -1);
-        when(service.findById(-1L, 1L)).thenThrow(new NotFoundException(error));
-        mvc.perform(get(URL + "/1")
-                        .header("X-Sharer-User-Id", -1))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error", is(error), String.class));
-
-        //fail by bookId
-        error = String.format("Бронирование с id %d не найдено", 99);
-        when(service.findById(1L, 99L)).thenThrow(new NotFoundException(error));
-        mvc.perform(get(URL + "/99")
-                        .header("X-Sharer-User-Id", 1))
-                .andDo(print())
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error", is(error), String.class));
     }
 
     @Test
@@ -124,7 +104,9 @@ class BookingControllerTest {
                 .thenReturn(Collections.emptyList());
         mvc.perform(get(URL)
                         .header("X-Sharer-User-Id", 1)
-                        .param("state", "rejected"))
+                        .param("state", "rejected")
+                        .param("from", "0")
+                        .param("size", "1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
@@ -145,30 +127,6 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$[0].item.id", is(bookingOutDto.getItem().getId()), Long.class))
                 .andExpect(jsonPath("$[0].booker.id", is(bookingOutDto.getBooker().getId()), Long.class))
                 .andExpect(jsonPath("$[0].status", is(bookingOutDto.getStatus().toString()), String.class));
-
-        //Fail By State
-        String error = "Unknown state: UNSUPPORTED_STATUS";
-        when(service.findByState(1L, State.UNKNOWN, 0, 1))
-                .thenThrow(new UnsupportedStatusException(error));
-        mvc.perform(get(URL)
-                        .header("X-Sharer-User-Id", 1)
-                        .param("state", "qwerty")
-                        .param("from", "0")
-                        .param("size", "1"))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString(error)));
-
-        //Fail By From
-        error = "Индекс первого элемента не может быть отрицательным";
-        mvc.perform(get(URL)
-                        .header("X-Sharer-User-Id", 1)
-                        .param("state", "qwerty")
-                        .param("from", "-1")
-                        .param("size", "1"))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString(error)));
     }
 
     @Test
@@ -178,7 +136,9 @@ class BookingControllerTest {
                 .thenReturn(Collections.emptyList());
         mvc.perform(get(URL + "/owner")
                         .header("X-Sharer-User-Id", 1)
-                        .param("state", "rejected"))
+                        .param("state", "rejected")
+                        .param("from", "0")
+                        .param("size", "1"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
@@ -201,31 +161,6 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$[0].start", containsString(String.valueOf(
                         bookingOutDto.getStart().getSecond())), String.class))
                 .andExpect(jsonPath("$[0].status", is(bookingOutDto.getStatus().toString()), String.class));
-
-        //Fail By State
-        String error = "Unknown state: UNSUPPORTED_STATUS";
-        when(service.findByOwnerItemsAndState(1L, State.UNKNOWN, 0, 1))
-                .thenThrow(new UnsupportedStatusException(error));
-        mvc.perform(get(URL + "/owner")
-                        .header("X-Sharer-User-Id", 1)
-                        .param("state", "qwerty")
-                        .param("from", "0")
-                        .param("size", "1"))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString(error)));
-
-        //Fail By From
-        error = "Индекс первого элемента не может быть отрицательным";
-        mvc.perform(get(URL + "/owner")
-                        .header("X-Sharer-User-Id", 1)
-                        .param("state", "qwerty")
-                        .param("from", "-1")
-                        .param("size", "1"))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString(error)));
-
     }
 
     @Test
@@ -270,46 +205,6 @@ class BookingControllerTest {
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error", is(error), String.class));
-
-        //fail by itemId null
-        bookingInDto.setItemId(null);
-        json = mapper.writeValueAsString(bookingInDto);
-        error = "Не указана вещь";
-        mvc.perform(post(URL)
-                        .header("X-Sharer-User-Id", 1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", notNullValue()))
-                .andExpect(jsonPath("$.error", containsString(error), String.class));
-
-        //fail by start time
-        bookingInDto.setItemId(1L);
-        bookingInDto.setStart(null);
-        json = mapper.writeValueAsString(bookingInDto);
-        error = "Дата начала бронирования не может быть пустой";
-        mvc.perform(post(URL)
-                        .header("X-Sharer-User-Id", 1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", notNullValue()))
-                .andExpect(jsonPath("$.error", containsString(error), String.class));
-
-        //fail by end time
-        bookingInDto.setStart(LocalDateTime.now().plusMinutes(1));
-        bookingInDto.setEnd(null);
-        json = mapper.writeValueAsString(bookingInDto);
-        error = "Дата окончания бронирования не может быть пустой";
-        mvc.perform(post(URL)
-                        .header("X-Sharer-User-Id", 1)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString(error), String.class));
     }
 
     @Test
@@ -343,15 +238,5 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.start", containsString(String.valueOf(
                         bookingOutDto.getStart().getSecond())), String.class))
                 .andExpect(jsonPath("$.status", is(bookingOutDto.getStatus().toString()), String.class));
-
-        //Fail by repeat answer
-        String error = String.format("Бронирование с id %d уже отклонено", 1);
-        when(service.patch(1L, 1L, false)).thenThrow(new ValidationException(error));
-        mvc.perform(patch(URL + "/1")
-                        .header("X-Sharer-User-Id", 1)
-                        .param("approved", "false"))
-                .andDo(print())
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error", containsString(error), String.class));
     }
 }
