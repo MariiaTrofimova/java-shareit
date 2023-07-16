@@ -2,7 +2,6 @@ package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
@@ -11,7 +10,6 @@ import ru.practicum.shareit.booking.dto.BookItemRequestDto;
 import ru.practicum.shareit.booking.dto.BookingState;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 
@@ -36,13 +34,14 @@ public class BookingController {
 
     @GetMapping("/owner")
     public ResponseEntity<Object> getBookingsForOwnerItems(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                           @RequestParam(defaultValue = "ALL") String stateParam,
-                                                           @RequestParam(defaultValue = "0")
-                                                           @Min(value = 0,
+                                                           @RequestParam(name = "state", defaultValue = "ALL") String stateParam,
+                                                           @PositiveOrZero(
                                                                    message = "Индекс первого элемента не может быть отрицательным")
-                                                           int from,
-                                                           @RequestParam(defaultValue = "10") @Positive(
-                                                                   message = "Количество элементов для отображения должно быть положительным") int size) {
+                                                           @RequestParam(defaultValue = "0") Integer from,
+                                                           @Positive(
+                                                                   message = "Количество элементов для отображения должно быть положительным")
+
+                                                           @RequestParam(defaultValue = "10") Integer size) {
         BookingState state = BookingState.from(stateParam)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + stateParam));
         log.info("Get bookings by owner with userId={} for his items with state {}, from={}, size={}", userId, stateParam, from, size);
@@ -57,11 +56,10 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}")
-    @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Object> patch(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                        @PathVariable("bookingId") long bookingId,
-                                        @RequestParam boolean approved) {
-		log.info("Patching booking {}, userIf={}, approved={}", bookingId, userId, approved);
+                                        @PathVariable("bookingId") Long bookingId,
+                                        @RequestParam Boolean approved) {
+        log.info("Patching booking {}, userId={}, approved={}", bookingId, userId, approved);
         return bookingClient.patchBooking(userId, bookingId, approved);
     }
 

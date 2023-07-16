@@ -21,7 +21,7 @@ import static org.hamcrest.Matchers.*;
 @Transactional
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-class ItemRequestServiceTestIT {
+class ItemRequestServiceITTest {
     private static final int SIZE_DEFAULT = 10;
 
     private final EntityManager em;

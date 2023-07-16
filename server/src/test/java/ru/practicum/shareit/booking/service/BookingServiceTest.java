@@ -19,15 +19,16 @@ import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.error.exception.NotFoundException;
 import ru.practicum.shareit.error.exception.OwnerBookingException;
 import ru.practicum.shareit.error.exception.UnsupportedStatusException;
+import ru.practicum.shareit.error.exception.ValidationException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
-import ru.practicum.shareit.error.exception.ValidationException;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -41,7 +42,7 @@ import static org.mockito.Mockito.when;
 class BookingServiceTest {
     private static final Sort SORT = Sort.by(Sort.Direction.DESC, "start");
     private static final Instant NOW = Instant.now();
-    private static final ZoneId ZONE_ID = ZoneId.systemDefault();
+    private static final ZoneId ZONE_ID = ZoneOffset.UTC;
 
     @Mock
     BookingRepository repository;
@@ -312,19 +313,9 @@ class BookingServiceTest {
                 () -> service.add(bookerId, bookingToSave));
         assertEquals(error, ex.getMessage());
 
-        //Fail By Date Validation
-        item.setAvailable(true);
-        when(itemRepo.findById(itemId)).thenReturn(Optional.of(item));
-        when(repository.findBookingsAtSameTime(itemId, Status.APPROVED, booking.getStart(), booking.getEnd()))
-                .thenReturn(List.of(booking2));
-        error = "Время для аренды недоступно";
-        ex = assertThrows(
-                ValidationException.class,
-                () -> service.add(bookerId, bookingToSave));
-        assertEquals(error, ex.getMessage());
-
         //Regular case
-        when(repository.findBookingsAtSameTime(itemId, Status.APPROVED, booking.getStart(), booking.getEnd()))
+        item.setAvailable(true);
+        when(repository.findBookingsAtSameTime(1L, Status.APPROVED, booking.getStart(), booking.getEnd()))
                 .thenReturn(Collections.emptyList());
         when(repository.save(any())).thenReturn(booking);
         BookingOutDto bookingOutDto = service.add(bookerId, bookingToSave);

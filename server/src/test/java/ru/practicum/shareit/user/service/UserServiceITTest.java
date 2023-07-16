@@ -20,7 +20,7 @@ import static org.hamcrest.Matchers.*;
 @Transactional
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-class UserServiceTestIT {
+class UserServiceITTest {
 
     private final EntityManager em;
     private final UserService service;

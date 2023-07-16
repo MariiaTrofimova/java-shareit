@@ -14,6 +14,7 @@ import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.enums.Status;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.error.exception.NotFoundException;
+import ru.practicum.shareit.error.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemBookingCommentsDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -23,7 +24,6 @@ import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
-import ru.practicum.shareit.error.exception.ValidationException;
 
 import java.time.Instant;
 import java.util.Collections;

@@ -23,7 +23,7 @@ import static org.hamcrest.Matchers.*;
 @Transactional
 @SpringBootTest
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-class BookingServiceTestIT {
+class BookingServiceITTest {
     private final EntityManager em;
     private final BookingService service;
 
