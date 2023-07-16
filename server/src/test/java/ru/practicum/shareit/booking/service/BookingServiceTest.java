@@ -28,7 +28,6 @@ import ru.practicum.shareit.user.repository.UserRepository;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +41,7 @@ import static org.mockito.Mockito.when;
 class BookingServiceTest {
     private static final Sort SORT = Sort.by(Sort.Direction.DESC, "start");
     private static final Instant NOW = Instant.now();
-    private static final ZoneId ZONE_ID = ZoneOffset.UTC;
+    private static final ZoneId ZONE_ID = ZoneId.systemDefault();
 
     @Mock
     BookingRepository repository;

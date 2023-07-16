@@ -8,14 +8,11 @@ import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserMapper;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
 
 public class BookingMapper {
-    private static final ZoneId ZONE_ID = ZoneOffset.UTC;
-    private static final ZoneOffset ZONE_OFFSET = ZoneOffset.UTC;
+    private static final ZoneId ZONE_ID = ZoneId.systemDefault();
+    private static final ZoneOffset ZONE_OFFSET = OffsetDateTime.now().getOffset();
 
     public static BookingOutDto toBookingDtoOut(Booking booking) {
         LocalDateTime start = LocalDateTime.ofInstant(booking.getStart(), ZONE_ID);

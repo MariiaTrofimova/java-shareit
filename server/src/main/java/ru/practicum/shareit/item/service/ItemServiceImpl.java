@@ -26,6 +26,8 @@ import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.validation.Validation;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -157,10 +159,12 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private void checkBooker(Long userId, long itemId) {
+        Instant now = Instant.now();
         List<Booking> bookingsItemByUser = bookingRepo
-                .findByBookerIdAndItemIdAndStatusAndStartIsBefore(userId, itemId, Status.APPROVED, Instant.now());
+                .findByBookerIdAndItemIdAndStatusAndStartIsBefore(userId, itemId, Status.APPROVED, now);
         if (bookingsItemByUser.isEmpty()) {
-            log.warn("Пользователь с id {} не арендовал вещь с id {}", userId, itemId);
+            log.warn("Пользователь с id {} не арендовал вещь с id {} на момент времени {}", userId, itemId,
+                    LocalDateTime.ofInstant(now, OffsetDateTime.now().getOffset()));
             throw new ValidationException(
                     String.format("Пользователь с id %s не арендовал вещь с id %s", userId, itemId));
         }
