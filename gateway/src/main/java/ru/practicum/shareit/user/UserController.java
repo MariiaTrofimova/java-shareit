@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.validation.Validation;
 
 import javax.validation.Valid;
 
@@ -41,6 +42,12 @@ public class UserController {
     @Validated(Update.class)
     public ResponseEntity<Object> patch(@Valid @RequestBody UserDto userDto,
                                         @PathVariable("id") long id) {
+        if (userDto.getName() != null) {
+            Validation.checkNotBlank(userDto.getName(), "Имя");
+        }
+        if (userDto.getEmail() != null) {
+            Validation.checkNotBlank(userDto.getEmail(), "E-mail");
+        }
         return userClient.patchUser(id, userDto);
     }
 

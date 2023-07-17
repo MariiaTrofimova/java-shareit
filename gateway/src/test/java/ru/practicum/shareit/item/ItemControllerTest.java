@@ -12,6 +12,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -67,6 +68,36 @@ class ItemControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error", containsString(error)));
 
+    }
+
+    @Test
+    void shouldValidatePatch() throws Exception {
+        //fail name
+        ItemDto itemDto = ItemDto.builder()
+                .name("")
+                .build();
+        String json = mapper.writeValueAsString(itemDto);
+        String error = "Название не может быть пустым";
+        mvc.perform(patch(URL + "/1")
+                        .header("X-Sharer-User-Id", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", containsString(error)));
+
+
+        //fail empty description
+        itemDto = ItemDto.builder().name("name").description("").build();
+        json = mapper.writeValueAsString(itemDto);
+        error = "Описание не может быть пустым";
+        mvc.perform(patch(URL + "/1")
+                        .header("X-Sharer-User-Id", 1)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", containsString(error)));
     }
 
     @Test

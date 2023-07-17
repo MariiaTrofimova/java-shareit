@@ -66,9 +66,35 @@ class UserControllerTest {
 
     @Test
     void shouldValidatePatch() throws Exception {
+        //fail name
+        UserDto userDto = UserDto.builder()
+                .name("")
+                .build();
+        String json = mapper.writeValueAsString(userDto);
+        String error = "Имя не может быть пустым";
+        mvc.perform(patch(URL + "/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", containsString(error)));
+
+        //fail empty email
+        userDto.setName(null);
+        userDto.setEmail("");
+        json = mapper.writeValueAsString(userDto);
+        error = "E-mail не может быть пустым";
+        this.mvc.perform(patch(URL + "/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", containsString(error)));
+
         //fail некорректный email
-        String json = "{\"email\": \"patched\"}";
-        String error = "Введен некорректный e-mail";
+        userDto.setEmail("patched");
+        json = mapper.writeValueAsString(userDto);
+        error = "Введен некорректный e-mail";
         mvc.perform(patch(URL + "/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))

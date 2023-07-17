@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.practicum.shareit.error.exception.EmailExistException;
 import ru.practicum.shareit.error.exception.NotFoundException;
-import ru.practicum.shareit.error.exception.ValidationException;
 import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
@@ -133,24 +132,6 @@ class UserServiceTest {
         assertNotNull(userDtoUpdated);
         assertEquals(userId, userDtoUpdated.getId());
         assertEquals(emailUpdated, userDtoUpdated.getEmail());
-
-        //Fail By Blank Name
-        String parameterName = "Имя";
-        error = String.format("%s не может быть пустым", parameterName);
-        ValidationException ex = assertThrows(
-                ValidationException.class,
-                () -> service.patch(userId, UserDto.builder().name("").build())
-        );
-        assertEquals(error, ex.getMessage());
-
-        //Fail By Blank Email
-        parameterName = "Email";
-        error = String.format("%s не может быть пустым", parameterName);
-        ex = assertThrows(
-                ValidationException.class,
-                () -> service.patch(userId, UserDto.builder().email("").build())
-        );
-        assertEquals(error, ex.getMessage());
     }
 
     @Test

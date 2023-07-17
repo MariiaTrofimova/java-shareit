@@ -134,10 +134,6 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException(String.format(
                     "Вещь с id %d  недоступна для бронирования", itemId));
         }
-        if (!bookingDto.getEnd().isAfter(bookingDto.getStart())) {
-            log.warn("Дата окончания бронирования должна быть после даты начала");
-            throw new ValidationException("Дата окончания бронирования должна быть после даты начала");
-        }
         Booking booking = BookingMapper.toBooking(bookingDto);
         Instant start = booking.getStart();
         Instant end = booking.getEnd();

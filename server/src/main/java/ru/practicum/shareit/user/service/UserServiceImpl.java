@@ -10,7 +10,6 @@ import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
-import ru.practicum.shareit.validation.Validation;
 
 import java.util.List;
 
@@ -60,11 +59,9 @@ public class UserServiceImpl implements UserService {
         String newEmail = userDto.getEmail();
 
         if (newName != null) {
-            Validation.checkNotBlank(newName, "Имя");
             user.setName(newName);
         }
         if (newEmail != null) {
-            Validation.checkNotBlank(newEmail, "Email");
             user.setEmail(newEmail);
         }
         user = repository.save(user);

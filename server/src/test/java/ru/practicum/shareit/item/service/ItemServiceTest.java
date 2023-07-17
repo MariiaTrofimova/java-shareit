@@ -184,24 +184,6 @@ class ItemServiceTest {
         when(userRepo.findById(userId)).thenReturn(Optional.of(owner));
         when(repository.findById(itemId)).thenReturn(Optional.of(item));
 
-        //fail by empty name
-        String parameterName = "Название";
-        String error = String.format("%s не может быть пустым", parameterName);
-        ValidationException exception = assertThrows(
-                ValidationException.class,
-                () -> service.patch(userId, itemId, ItemDto.builder().name("").build())
-        );
-        assertEquals(error, exception.getMessage());
-
-        //fail by empty description
-        parameterName = "Описание";
-        error = String.format("%s не может быть пустым", parameterName);
-        exception = assertThrows(
-                ValidationException.class,
-                () -> service.patch(userId, itemId, ItemDto.builder().description("").build())
-        );
-        assertEquals(error, exception.getMessage());
-
         //regular case
         String newName = "nameUpdate";
         String newDescription = "newDescription";
