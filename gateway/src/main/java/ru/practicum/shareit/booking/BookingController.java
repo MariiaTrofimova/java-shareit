@@ -19,13 +19,18 @@ import javax.validation.constraints.PositiveOrZero;
 @Slf4j
 @Validated
 public class BookingController {
+    private static final String FROM_ERROR_MESSAGE = "Индекс первого элемента не может быть отрицательным";
+    private static final String SIZE_ERROR_MESSAGE = "Количество элементов для отображения должно быть положительным";
+
     private final BookingClient bookingClient;
 
     @GetMapping
     public ResponseEntity<Object> getBookings(@RequestHeader("X-Sharer-User-Id") long userId,
                                               @RequestParam(name = "state", defaultValue = "all") String stateParam,
-                                              @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") Integer from,
-                                              @Positive @RequestParam(name = "size", defaultValue = "10") Integer size) {
+                                              @PositiveOrZero(message = FROM_ERROR_MESSAGE)
+                                              @RequestParam(name = "from", defaultValue = "0") Integer from,
+                                              @Positive(message = SIZE_ERROR_MESSAGE)
+                                              @RequestParam(name = "size", defaultValue = "10") Integer size) {
         BookingState state = BookingState.from(stateParam)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + stateParam));
         log.info("Get booking with state {}, userId={}, from={}, size={}", stateParam, userId, from, size);
@@ -35,11 +40,9 @@ public class BookingController {
     @GetMapping("/owner")
     public ResponseEntity<Object> getBookingsForOwnerItems(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                            @RequestParam(name = "state", defaultValue = "ALL") String stateParam,
-                                                           @PositiveOrZero(
-                                                                   message = "Индекс первого элемента не может быть отрицательным")
+                                                           @PositiveOrZero(message = FROM_ERROR_MESSAGE)
                                                            @RequestParam(defaultValue = "0") Integer from,
-                                                           @Positive(
-                                                                   message = "Количество элементов для отображения должно быть положительным")
+                                                           @Positive(message = SIZE_ERROR_MESSAGE)
 
                                                            @RequestParam(defaultValue = "10") Integer size) {
         BookingState state = BookingState.from(stateParam)

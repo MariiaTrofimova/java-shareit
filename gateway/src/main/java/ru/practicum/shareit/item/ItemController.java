@@ -21,17 +21,16 @@ import static ru.practicum.shareit.validation.ValidationGroups.Update;
 @Slf4j
 @Validated
 public class ItemController {
+    private static final String FROM_ERROR_MESSAGE = "Индекс первого элемента не может быть отрицательным";
+    private static final String SIZE_ERROR_MESSAGE = "Количество элементов для отображения должно быть положительным";
+
     private final ItemClient itemClient;
 
     @GetMapping
     public ResponseEntity<Object> findAllByUserId(
             @RequestHeader("X-Sharer-User-Id") long userId,
-            @RequestParam(defaultValue = "0")
-            @PositiveOrZero(message = "Индекс первого элемента не может быть отрицательным")
-            Integer from,
-            @RequestParam(defaultValue = "10")
-            @Positive(message = "Количество элементов для отображения должно быть положительным")
-            Integer size) {
+            @RequestParam(defaultValue = "0") @PositiveOrZero(message = FROM_ERROR_MESSAGE) Integer from,
+            @RequestParam(defaultValue = "10") @Positive(message = SIZE_ERROR_MESSAGE) Integer size) {
         log.info("Get items with  userId={}, from={}, size={}", userId, from, size);
         return itemClient.getItems(userId, from, size);
     }
@@ -46,14 +45,8 @@ public class ItemController {
     public ResponseEntity<Object> findByText(
             @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam String text,
-            @RequestParam(defaultValue = "0")
-            @PositiveOrZero(
-                    message = "Индекс первого элемента не может быть отрицательным")
-            Integer from,
-            @RequestParam(defaultValue = "10")
-            @Positive(
-                    message = "Количество элементов для отображения должно быть положительным")
-            Integer size) {
+            @RequestParam(defaultValue = "0") @PositiveOrZero(message = FROM_ERROR_MESSAGE) Integer from,
+            @RequestParam(defaultValue = "10") @Positive(message = SIZE_ERROR_MESSAGE) Integer size) {
         return itemClient.findItemByText(userId, text, from, size);
     }
 

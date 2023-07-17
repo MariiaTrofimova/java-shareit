@@ -16,6 +16,9 @@ import javax.validation.constraints.PositiveOrZero;
 @Validated
 @RequiredArgsConstructor
 public class ItemRequestController {
+    private static final String FROM_ERROR_MESSAGE = "Индекс первого элемента не может быть отрицательным";
+    private static final String SIZE_ERROR_MESSAGE = "Количество элементов для отображения должно быть положительным";
+
     private final ItemRequestClient requestClient;
 
     @PostMapping
@@ -35,12 +38,8 @@ public class ItemRequestController {
     @GetMapping("/all")
     public ResponseEntity<Object> findAll(
             @RequestHeader("X-Sharer-User-Id") long userId,
-            @RequestParam(defaultValue = "0")
-            @PositiveOrZero(message = "Индекс первого элемента не может быть отрицательным")
-            Integer from,
-            @RequestParam(defaultValue = "10")
-            @Positive(message = "Количество элементов для отображения должно быть положительным")
-            Integer size) {
+            @RequestParam(defaultValue = "0") @PositiveOrZero(message = FROM_ERROR_MESSAGE) Integer from,
+            @RequestParam(defaultValue = "10") @Positive(message = SIZE_ERROR_MESSAGE) Integer size) {
         return requestClient.findAllRequests(userId, from, size);
     }
 
